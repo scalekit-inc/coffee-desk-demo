@@ -1,0 +1,50 @@
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+main
+b2bapp-demo
+coffee-desk
+scalekit-b2b-backend
+
+# React build artifacts
+internal/templates/assets/
+internal/templates/*.html
+web/dist/
+web/dist-ssr/
+
+# Dependencies
+node_modules/
+web/node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*~
+
+# Database files (if any)
+*.db
+*.sqlite
+*.sqlite3 

@@ -1,0 +1,12 @@
+{
+  "name": "coffee-desk-demo",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build-frontend": "node scripts/build-frontend.js"
+  },
+  "devDependencies": {
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  }
+} 
