@@ -29,20 +29,20 @@ func convertScalekitUserIDToLocal(scalekitUserID string) (*uuid.UUID, error) {
 
 // CreateProjectRequest represents the request body for creating a project
 type CreateProjectRequest struct {
-	Name        string     `json:"name" binding:"required"`
-	Description *string    `json:"description,omitempty"`
-	Priority    string     `json:"priority" binding:"required,oneof=P1 P2 P3"`
-	Status      string     `json:"status" binding:"required,oneof=Backlog Todo InProgress Done"`
-	OwnerID     *uuid.UUID `json:"owner_id,omitempty"`
+	Name        string  `json:"name" binding:"required"`
+	Description *string `json:"description,omitempty"`
+	Priority    string  `json:"priority" binding:"required,oneof=P1 P2 P3"`
+	Status      string  `json:"status" binding:"required,oneof=Backlog Todo InProgress Done"`
+	OwnerID     string  `json:"owner_id,omitempty"`
 }
 
 // UpdateProjectRequest represents the request body for updating a project
 type UpdateProjectRequest struct {
-	Name        *string    `json:"name,omitempty"`
-	Description *string    `json:"description,omitempty"`
-	Priority    *string    `json:"priority,omitempty" binding:"omitempty,oneof=P1 P2 P3"`
-	Status      *string    `json:"status,omitempty" binding:"omitempty,oneof=Backlog Todo InProgress Done"`
-	OwnerID     *uuid.UUID `json:"owner_id,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Priority    *string `json:"priority,omitempty" binding:"omitempty,oneof=P1 P2 P3"`
+	Status      *string `json:"status,omitempty" binding:"omitempty,oneof=Backlog Todo InProgress Done"`
+	OwnerID     *string `json:"owner_id,omitempty"`
 }
 
 // GetProjectsHandler handles fetching all projects for an organization
@@ -115,6 +115,27 @@ func CreateProjectHandler(c *gin.Context) {
 		return
 	}
 
+	// Parse owner_id if provided (can be UUID or email)
+	var ownerID *uuid.UUID
+	if req.OwnerID != "" {
+		// Try to parse as UUID first
+		if parsedID, err := uuid.Parse(req.OwnerID); err == nil {
+			ownerID = &parsedID
+		} else {
+			// If not a UUID, treat as email and look up user
+			var user database.User
+			if err := database.DB.Where("email = ?", req.OwnerID).First(&user).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "User not found with email: " + req.OwnerID})
+					return
+				}
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to look up user"})
+				return
+			}
+			ownerID = &user.ID
+		}
+	}
+
 	// Create project
 	project := database.Project{
 		OrganizationID: userInfo.OrganizationID,
@@ -122,7 +143,7 @@ func CreateProjectHandler(c *gin.Context) {
 		Description:    req.Description,
 		Priority:       database.Priority(req.Priority),
 		Status:         database.Status(req.Status),
-		OwnerID:        req.OwnerID,
+		OwnerID:        ownerID,
 	}
 
 	if err := database.DB.Create(&project).Error; err != nil {
@@ -223,7 +244,27 @@ func UpdateProjectHandler(c *gin.Context) {
 		updates["status"] = database.Status(*req.Status)
 	}
 	if req.OwnerID != nil {
-		updates["owner_id"] = *req.OwnerID
+		if *req.OwnerID == "" {
+			// Set to nil if empty string
+			updates["owner_id"] = nil
+		} else {
+			// Try to parse as UUID first
+			if parsedID, err := uuid.Parse(*req.OwnerID); err == nil {
+				updates["owner_id"] = parsedID
+			} else {
+				// If not a UUID, treat as email and look up user
+				var user database.User
+				if err := database.DB.Where("email = ?", *req.OwnerID).First(&user).Error; err != nil {
+					if err == gorm.ErrRecordNotFound {
+						c.JSON(http.StatusBadRequest, gin.H{"error": "User not found with email: " + *req.OwnerID})
+						return
+					}
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to look up user"})
+					return
+				}
+				updates["owner_id"] = user.ID
+			}
+		}
 	}
 
 	// Apply updates

@@ -279,8 +279,8 @@ export default function Projects() {
                             <StatusBadge status={project.status} />
                           </TableCell>
                           <TableCell>
-                            {project.owner_id ? (
-                              <Badge variant="outline">{project.owner_id}</Badge>
+                            {project.owner ? (
+                              <Badge variant="outline">{project.owner.email}</Badge>
                             ) : (
                               <span className="text-muted-foreground">Unassigned</span>
                             )}

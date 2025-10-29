@@ -326,8 +326,8 @@ export default function ProjectDetail() {
                             <StatusBadge status={task.status} />
                           </TableCell>
                           <TableCell>
-                            {task.assignee_id ? (
-                              <Badge variant="outline">{task.assignee_id}</Badge>
+                            {task.assignee ? (
+                              <Badge variant="outline">{task.assignee.email}</Badge>
                             ) : (
                               <span className="text-muted-foreground">Unassigned</span>
                             )}

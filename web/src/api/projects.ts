@@ -1,5 +1,13 @@
 import { config } from '@/config';
 
+export interface User {
+  id: string;
+  external_id: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Project {
   id: string;
   organization_id: string;
@@ -8,6 +16,7 @@ export interface Project {
   priority: 'P1' | 'P2' | 'P3';
   status: 'Backlog' | 'Todo' | 'InProgress' | 'Done';
   owner_id?: string;
+  owner?: User;
   created_at: string;
   updated_at: string;
   tasks?: Task[];
@@ -22,6 +31,7 @@ export interface Task {
   priority: 'P1' | 'P2' | 'P3';
   status: 'Backlog' | 'Todo' | 'InProgress' | 'Done';
   assignee_id?: string;
+  assignee?: User;
   created_at: string;
   updated_at: string;
   project?: Project;

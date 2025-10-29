@@ -188,8 +188,8 @@ export default function TaskDetail() {
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Assignee</label>
                         <div className="mt-1">
-                          {task.assignee_id ? (
-                            <Badge variant="outline">{task.assignee_id}</Badge>
+                          {task.assignee ? (
+                            <Badge variant="outline">{task.assignee.email}</Badge>
                           ) : (
                             <span className="text-muted-foreground">Unassigned</span>
                           )}
