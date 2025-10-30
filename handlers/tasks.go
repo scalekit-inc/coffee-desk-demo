@@ -12,22 +12,22 @@ import (
 
 // CreateTaskRequest represents the request body for creating a task
 type CreateTaskRequest struct {
-	Name        string     `json:"name" binding:"required"`
-	Description *string    `json:"description,omitempty"`
-	Priority    string     `json:"priority" binding:"required,oneof=P1 P2 P3"`
-	Status      string     `json:"status" binding:"required,oneof=Backlog Todo InProgress Done"`
-	ProjectID   *uuid.UUID `json:"project_id,omitempty"`
-	AssigneeID  *uuid.UUID `json:"assignee_id,omitempty"`
+	Name        string  `json:"name" binding:"required"`
+	Description *string `json:"description,omitempty"`
+	Priority    string  `json:"priority" binding:"required,oneof=P1 P2 P3"`
+	Status      string  `json:"status" binding:"required,oneof=Backlog Todo InProgress Done"`
+	ProjectID   string  `json:"project_id,omitempty"`
+	AssigneeID  string  `json:"assignee_id,omitempty"`
 }
 
 // UpdateTaskRequest represents the request body for updating a task
 type UpdateTaskRequest struct {
-	Name        *string    `json:"name,omitempty"`
-	Description *string    `json:"description,omitempty"`
-	Priority    *string    `json:"priority,omitempty" binding:"omitempty,oneof=P1 P2 P3"`
-	Status      *string    `json:"status,omitempty" binding:"omitempty,oneof=Backlog Todo InProgress Done"`
-	ProjectID   *uuid.UUID `json:"project_id,omitempty"`
-	AssigneeID  *uuid.UUID `json:"assignee_id,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Priority    *string `json:"priority,omitempty" binding:"omitempty,oneof=P1 P2 P3"`
+	Status      *string `json:"status,omitempty" binding:"omitempty,oneof=Backlog Todo InProgress Done"`
+	ProjectID   *string `json:"project_id,omitempty"`
+	AssigneeID  *string `json:"assignee_id,omitempty"`
 }
 
 // GetTasksHandler handles fetching all tasks for an organization
@@ -118,20 +118,46 @@ func CreateTaskHandler(c *gin.Context) {
 		return
 	}
 
-	// Use project ID directly (already validated by binding)
-	projectID := req.ProjectID
-
-	// Verify project exists and belongs to organization if provided
-	if projectID != nil {
-		var project database.Project
-		if err := database.DB.Where("id = ? AND organization_id = ?", projectID, userInfo.OrganizationID).
-			First(&project).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Project not found"})
+	// Parse project_id if provided (can be UUID or project name)
+	var projectID *uuid.UUID
+	if req.ProjectID != "" {
+		// Try to parse as UUID first
+		if parsedID, err := uuid.Parse(req.ProjectID); err == nil {
+			projectID = &parsedID
+		} else {
+			// If not a UUID, treat as project name and look up project
+			var project database.Project
+			if err := database.DB.Where("name = ? AND organization_id = ?", req.ProjectID, userInfo.OrganizationID).
+				First(&project).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Project not found with name: " + req.ProjectID})
+					return
+				}
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to look up project"})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to validate project"})
-			return
+			projectID = &project.ID
+		}
+	}
+
+	// Parse assignee_id if provided (can be UUID or email)
+	var assigneeID *uuid.UUID
+	if req.AssigneeID != "" {
+		// Try to parse as UUID first
+		if parsedID, err := uuid.Parse(req.AssigneeID); err == nil {
+			assigneeID = &parsedID
+		} else {
+			// If not a UUID, treat as email and look up user
+			var user database.User
+			if err := database.DB.Where("email = ?", req.AssigneeID).First(&user).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "User not found with email: " + req.AssigneeID})
+					return
+				}
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to look up user"})
+				return
+			}
+			assigneeID = &user.ID
 		}
 	}
 
@@ -143,7 +169,7 @@ func CreateTaskHandler(c *gin.Context) {
 		Description:    req.Description,
 		Priority:       database.Priority(req.Priority),
 		Status:         database.Status(req.Status),
-		AssigneeID:     req.AssigneeID,
+		AssigneeID:     assigneeID,
 	}
 
 	if err := database.DB.Create(&task).Error; err != nil {
@@ -232,20 +258,6 @@ func UpdateTaskHandler(c *gin.Context) {
 		return
 	}
 
-	// Verify project exists and belongs to organization if provided
-	if req.ProjectID != nil {
-		var project database.Project
-		if err := database.DB.Where("id = ? AND organization_id = ?", req.ProjectID, userInfo.OrganizationID).
-			First(&project).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Project not found"})
-				return
-			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to validate project"})
-			return
-		}
-	}
-
 	// Update fields
 	updates := make(map[string]interface{})
 	if req.Name != nil {
@@ -261,10 +273,51 @@ func UpdateTaskHandler(c *gin.Context) {
 		updates["status"] = database.Status(*req.Status)
 	}
 	if req.ProjectID != nil {
-		updates["project_id"] = *req.ProjectID
+		if *req.ProjectID == "" {
+			// Set to nil if empty string
+			updates["project_id"] = nil
+		} else {
+			// Try to parse as UUID first
+			if parsedID, err := uuid.Parse(*req.ProjectID); err == nil {
+				updates["project_id"] = parsedID
+			} else {
+				// If not a UUID, treat as project name and look up project
+				var project database.Project
+				if err := database.DB.Where("name = ? AND organization_id = ?", *req.ProjectID, userInfo.OrganizationID).
+					First(&project).Error; err != nil {
+					if err == gorm.ErrRecordNotFound {
+						c.JSON(http.StatusBadRequest, gin.H{"error": "Project not found with name: " + *req.ProjectID})
+						return
+					}
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to look up project"})
+					return
+				}
+				updates["project_id"] = project.ID
+			}
+		}
 	}
 	if req.AssigneeID != nil {
-		updates["assignee_id"] = *req.AssigneeID
+		if *req.AssigneeID == "" {
+			// Set to nil if empty string
+			updates["assignee_id"] = nil
+		} else {
+			// Try to parse as UUID first
+			if parsedID, err := uuid.Parse(*req.AssigneeID); err == nil {
+				updates["assignee_id"] = parsedID
+			} else {
+				// If not a UUID, treat as email and look up user
+				var user database.User
+				if err := database.DB.Where("email = ?", *req.AssigneeID).First(&user).Error; err != nil {
+					if err == gorm.ErrRecordNotFound {
+						c.JSON(http.StatusBadRequest, gin.H{"error": "User not found with email: " + *req.AssigneeID})
+						return
+					}
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to look up user"})
+					return
+				}
+				updates["assignee_id"] = user.ID
+			}
+		}
 	}
 
 	// Apply updates
