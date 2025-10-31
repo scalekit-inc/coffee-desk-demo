@@ -39,6 +39,10 @@ const Profile = () => {
     // The useAuth hook will automatically update the user data through refetchSession
   };
 
+  const handleAddPasskey = () => {
+    window.location.href = `${config.backendUrl}/ui/profile/passkeys`;
+  };
+
   const displayName = user?.name || user?.first_name || "User";
   const initials = user?.first_name && user?.last_name 
     ? `${user.first_name[0]}${user.last_name[0]}` 
@@ -128,6 +132,23 @@ const Profile = () => {
               user={user} 
               onUserUpdate={handleUserUpdate}
             />
+
+            {/* Passkeys Section */}
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">Passkeys</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Securely sign-in with on-device biometric authentication.
+                    </p>
+                  </div>
+                  <Button variant="outline" onClick={handleAddPasskey}>
+                    Add passkey
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Organizations Section */}
             <Card>
