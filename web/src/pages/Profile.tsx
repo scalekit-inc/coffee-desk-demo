@@ -40,7 +40,7 @@ const Profile = () => {
   };
 
   const handleAddPasskey = () => {
-    window.location.href = `${config.backendUrl}/ui/profile/passkeys`;
+    window.location.href = `${config.scalekitEnvironmentUrl}/ui/profile/passkeys`;
   };
 
   const displayName = user?.name || user?.first_name || "User";
@@ -49,7 +49,6 @@ const Profile = () => {
     : user?.name 
     ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2)
     : "U";
-
   // Get first letter of email for profile icon
   const emailInitial = user?.email ? user.email[0].toUpperCase() : "U";
 
@@ -69,15 +68,31 @@ const Profile = () => {
   return (
     <div className="flex flex-col min-h-screen w-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-background">
+      <div className="flex items-center justify-between p-4 border-b bg-background z-10">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold">My Profile</h1>
+          {/* App logo in top-left */}
+          <img 
+            src="/uploads/coffee-desk-name-icon.png" 
+            alt="Coffeedesk Logo" 
+            className="h-8 w-auto"
+          />
+          
+          {/* Organization switcher immediately next to logo */}
+          <WorkspaceDropdown />
         </div>
         
+        {/* Right side of header with search, documentation, and profile */}
         <div className="flex items-center gap-4">
-          <WorkspaceDropdown />
-          
-          <Button variant="outline" size="sm">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search"
+              className="pl-10 pr-4 py-2 border border-input rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            />
+          </div>
+
+          <Button variant="ghost" size="sm">
             Documentation
           </Button>
 
