@@ -135,8 +135,8 @@ export default function Projects() {
         <div className="flex items-center gap-4">
           {/* App logo in top-left */}
           <img 
-            src="/uploads/fe8916e1-c333-4b24-9051-655a97f99240.png" 
-            alt="DevRamp Logo" 
+            src="/uploads/coffee-desk-name-icon.png" 
+            alt="Coffeedesk Logo" 
             className="h-8 w-auto"
           />
           
