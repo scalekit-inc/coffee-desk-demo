@@ -507,7 +507,7 @@ export default function Workspace() {
 
   const handleSaveWorkspace = async () => {
     if (!workspaceData?.id || !workspaceName.trim()) {
-      toast.error("Workspace name cannot be empty");
+      toast.error("Organization name cannot be empty");
       return;
     }
 
@@ -526,15 +526,15 @@ export default function Workspace() {
       });
 
       if (response.ok) {
-        toast.success('Workspace name updated successfully');
+        toast.success('Organization name updated successfully');
         // You might want to refresh the workspace data here
         // or update the local state if you have a way to refresh workspaces
       } else {
-        toast.error(`Failed to update workspace: ${response.status}`);
+        toast.error(`Failed to update organization: ${response.status}`);
       }
     } catch (error) {
-      console.error("Failed to update workspace:", error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update workspace');
+      console.error("Failed to update organization:", error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update organization');
     } finally {
       setIsSaving(false);
     }
@@ -691,7 +691,7 @@ export default function Workspace() {
     <RBACGuard requirePermission="workspace:admin">
       <TooltipProvider delayDuration={0}>
         <div className="flex flex-col min-h-screen w-full">
-      {/* Top section with logo and workspace dropdown */}
+      {/* Top section with logo and organization dropdown */}
       <div className="flex items-center justify-between p-4 border-b bg-background z-10">
         <div className="flex items-center gap-4">
           {/* App logo in top-left */}
@@ -701,7 +701,7 @@ export default function Workspace() {
             className="h-8 w-auto"
           />
           
-          {/* Workspace switcher immediately next to logo */}
+          {/* Organization switcher immediately next to logo */}
           <WorkspaceDropdown />
         </div>
         
@@ -754,7 +754,7 @@ export default function Workspace() {
         </div>
       </div>
 
-      {/* Main content area with sidebar and workspace content */}
+      {/* Main content area with sidebar and organization content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className="w-64 flex-shrink-0 border-r bg-background">
@@ -765,7 +765,7 @@ export default function Workspace() {
         <div className="flex-1 overflow-auto">
           <div className="p-6 space-y-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-semibold">Workspace Settings</h1>
+              <h1 className="text-2xl font-semibold">Organization Settings</h1>
             </div>
 
             <Tabs defaultValue={getActiveTab()} className="space-y-6" value={getActiveTab()} onValueChange={handleTabChange}>
@@ -779,13 +779,13 @@ export default function Workspace() {
               <TabsContent value="general" className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Workspace Settings</CardTitle>
+                    <CardTitle>Organization Settings</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="text-sm font-medium">Workspace Logo</h3>
+                          <h3 className="text-sm font-medium">Organization Logo</h3>
                           <p className="text-xs text-muted-foreground">Recommended image size: 200x200px</p>
                         </div>
                         <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
@@ -796,18 +796,18 @@ export default function Workspace() {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Workspace name</label>
+                        <label className="text-sm font-medium">Organization name</label>
                         <input 
                           type="text" 
                           value={workspaceName}
                           onChange={(e) => setWorkspaceName(e.target.value)}
                           className="w-full px-3 py-2 border rounded-md"
-                          placeholder="Enter workspace name"
+                          placeholder="Enter organization name"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Workspace ID</label>
+                        <label className="text-sm font-medium">Organization ID</label>
                         <input 
                           type="text" 
                           value={workspaceData?.id || ""}
@@ -965,7 +965,7 @@ export default function Workspace() {
                   <CardHeader>
                     <CardTitle>Allowed Email Domains</CardTitle>
                     <CardDescription>
-                      Anyone with email addresses at these domains can automatically join this workspace.
+                      Anyone with email addresses at these domains can automatically join this organization.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -1039,7 +1039,7 @@ export default function Workspace() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Advanced Settings</CardTitle>
-                    <CardDescription>Configure advanced workspace settings including SSO and SCIM</CardDescription>
+                    <CardDescription>Configure advanced organization settings including SSO and SCIM</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {portalLoading ? (

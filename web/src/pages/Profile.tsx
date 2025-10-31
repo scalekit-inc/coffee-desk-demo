@@ -129,16 +129,16 @@ const Profile = () => {
               onUserUpdate={handleUserUpdate}
             />
 
-            {/* Workspaces Section */}
+            {/* Organizations Section */}
             <Card>
               <CardHeader>
-                <CardTitle>Workspaces</CardTitle>
+                <CardTitle>Organizations</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Workspace</TableHead>
+                      <TableHead>Organization</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="w-[50px]"></TableHead>
                     </TableRow>

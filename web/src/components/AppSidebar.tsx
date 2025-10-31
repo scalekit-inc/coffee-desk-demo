@@ -80,7 +80,7 @@ export function AppSidebar() {
               className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses("/dashboard/workspace")}`}
             >
               <Settings className="h-4 w-4" />
-              <span>Workspace</span>
+              <span>Organization</span>
             </Link>
           )}
           {canAccessBilling && (

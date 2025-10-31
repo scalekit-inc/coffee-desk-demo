@@ -65,7 +65,7 @@ const Onboarding = () => {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome to DevRamp 👋</CardTitle>
           <CardDescription>
-            What should we call you—and your workspace?
+            What should we call you—and your organization?
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -106,10 +106,10 @@ const Onboarding = () => {
               <FormField
                 control={form.control}
                 name="workspaceName"
-                rules={{ required: "Workspace name is required" }}
+                rules={{ required: "Organization name is required" }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Workspace name</FormLabel>
+                    <FormLabel>Organization name</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. Acme corp" {...field} />
                     </FormControl>
@@ -127,10 +127,10 @@ const Onboarding = () => {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  "Creating Workspace..."
+                  "Creating Organization..."
                 ) : (
                   <>
-                    Create Workspace
+                    Create Organization
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
