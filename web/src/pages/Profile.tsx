@@ -40,7 +40,8 @@ const Profile = () => {
   };
 
   const handleAddPasskey = () => {
-    window.location.href = `${config.scalekitEnvironmentUrl}/ui/profile/passkeys`;
+    // Redirect to backend endpoint which will redirect to Scalekit passkeys page
+    window.location.href = `${config.backendUrl}/api/scalekit/passkeys`;
   };
 
   const displayName = user?.name || user?.first_name || "User";

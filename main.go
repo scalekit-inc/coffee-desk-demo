@@ -112,6 +112,8 @@ func main() {
 		api.DELETE("/workspace/domains/:domain_id", handlers.DeleteDomainHandler)
 		api.PUT("/user/profile", handlers.UpdateUserProfileHandler)
 		api.GET("/portal/link", handlers.GetPortalLinkHandler)
+		api.GET("/scalekit/environment-url", handlers.GetScaleKitEnvironmentURLHandler)
+		api.GET("/scalekit/passkeys", handlers.RedirectToPasskeysHandler)
 		api.POST("/workspace/onboarding", handlers.OnboardingHandler)
 
 		// Project Management API routes
