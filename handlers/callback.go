@@ -33,8 +33,9 @@ func CallbackHandler(c *gin.Context) {
 	log.Printf("Using redirect URL: %s", redirectURL)
 
 	// Exchange code for token
+	tokenURL := envURL + "/oauth/token"
 	tokenResp, err := http.Post(
-		envURL+"/oauth/token",
+		tokenURL,
 		"application/x-www-form-urlencoded",
 		strings.NewReader(encodeParams(map[string]string{
 			"code":          code,
@@ -49,12 +50,17 @@ func CallbackHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to exchange code for token"})
 		return
 	}
+	defer tokenResp.Body.Close()
 	if tokenResp.StatusCode != 200 {
-		log.Printf("Token exchange failed with status %d:", tokenResp.StatusCode)
+		body, readErr := io.ReadAll(tokenResp.Body)
+		bodyStr := string(body)
+		if readErr != nil {
+			bodyStr = "Failed to read response body: " + readErr.Error()
+		}
+		log.Printf("Token exchange failed with status %d. URL: %s, Response body: %s", tokenResp.StatusCode, tokenURL, bodyStr)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to exchange code for token"})
 		return
 	}
-	defer tokenResp.Body.Close()
 
 	var tokenData map[string]interface{}
 	if err := json.NewDecoder(tokenResp.Body).Decode(&tokenData); err != nil {

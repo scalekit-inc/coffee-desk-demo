@@ -68,15 +68,16 @@ func main() {
 		panic(err)
 	}
 
-	// Serve favicon.ico
+	// Serve favicon.ico (using PNG format - modern browsers support it)
 	r.GET("/favicon.ico", func(c *gin.Context) {
-		file, err := rootFiles.Open("favicon.ico")
+		// Serve the coffee cup icon PNG from uploads
+		file, err := uploads.Open("coffee-cup-favicon.png")
 		if err != nil {
 			c.Status(404)
 			return
 		}
 		defer file.Close()
-		c.DataFromReader(200, -1, "image/x-icon", file, nil)
+		c.DataFromReader(200, -1, "image/png", file, nil)
 	})
 
 	// Serve robots.txt
