@@ -231,8 +231,8 @@ export default function ProjectDetail() {
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Owner</label>
                         <div className="mt-1">
-                          {project.owner_id ? (
-                            <Badge variant="outline">{project.owner_id}</Badge>
+                          {project.owner ? (
+                            <Badge variant="outline">{project.owner.email}</Badge>
                           ) : (
                             <span className="text-muted-foreground">Unassigned</span>
                           )}
