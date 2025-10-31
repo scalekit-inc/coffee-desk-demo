@@ -63,7 +63,7 @@ const Onboarding = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome to DevRamp 👋</CardTitle>
+          <CardTitle className="text-2xl">Welcome to Coffee Desk 👋</CardTitle>
           <CardDescription>
             What should we call you—and your organization?
           </CardDescription>
