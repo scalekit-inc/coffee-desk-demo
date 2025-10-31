@@ -28,6 +28,7 @@ import { WorkspaceDropdown } from "@/components/WorkspaceDropdown";
 import { projectsApi, Project } from "@/api/projects";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { hasPermission } from "@/components/RBACGuard";
 import { config } from "@/config";
 import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, User, LogOut } from "lucide-react";
 
@@ -119,6 +120,9 @@ export default function Projects() {
   // Get first letter of email for profile icon
   const emailInitial = user?.email ? user.email[0].toUpperCase() : "U";
 
+  // RBAC: Check if user has permission to create/edit/delete projects
+  const canManageProjects = hasPermission(user?.permissions, "workspace:admin");
+
   const filteredProjects = projects.filter((project) =>
     project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (project.description && project.description.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -207,10 +211,12 @@ export default function Projects() {
                   Manage your projects and track progress
                 </p>
               </div>
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Project
-              </Button>
+              {canManageProjects && (
+                <Button onClick={() => setIsCreateModalOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Project
+                </Button>
+              )}
             </div>
 
             {/* Search and filters */}
@@ -242,10 +248,12 @@ export default function Projects() {
                 ) : filteredProjects.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8">
                     <div className="text-muted-foreground mb-4">No projects found</div>
-                    <Button onClick={() => setIsCreateModalOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create your first project
-                    </Button>
+                    {canManageProjects && (
+                      <Button onClick={() => setIsCreateModalOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create your first project
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <Table>
@@ -302,17 +310,21 @@ export default function Projects() {
                                   <Eye className="h-4 w-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleEdit(project)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDelete(project.id)}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
+                                {canManageProjects && (
+                                  <>
+                                    <DropdownMenuItem onClick={() => handleEdit(project)}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleDelete(project.id)}
+                                      className="text-destructive"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>

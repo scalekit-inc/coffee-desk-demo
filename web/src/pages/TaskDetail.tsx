@@ -16,6 +16,8 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { WorkspaceDropdown } from "@/components/WorkspaceDropdown";
 import { tasksApi, Task } from "@/api/projects";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { hasPermission } from "@/components/RBACGuard";
 import { ArrowLeft, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 
 export default function TaskDetail() {
@@ -25,6 +27,10 @@ export default function TaskDetail() {
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // RBAC: Check if user has permission to edit/delete tasks
+  const canManageTasks = hasPermission(user?.permissions, "workspace:admin");
 
   const loadTask = async () => {
     if (!id) return;
@@ -139,26 +145,28 @@ export default function TaskDetail() {
                           {task.description || "No description provided"}
                         </CardDescription>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Task
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={handleDelete}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Task
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {canManageTasks && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Task
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={handleDelete}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Task
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>

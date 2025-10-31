@@ -35,6 +35,7 @@ import { WorkspaceDropdown } from "@/components/WorkspaceDropdown";
 import { tasksApi, projectsApi, Task, Project } from "@/api/projects";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { hasPermission } from "@/components/RBACGuard";
 import { config } from "@/config";
 import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, User, LogOut } from "lucide-react";
 
@@ -147,6 +148,9 @@ export default function Tasks() {
   // Get first letter of email for profile icon
   const emailInitial = user?.email ? user.email[0].toUpperCase() : "U";
 
+  // RBAC: Check if user has permission to create/edit/delete tasks
+  const canManageTasks = hasPermission(user?.permissions, "workspace:admin");
+
   const filteredTasks = tasks.filter((task) =>
     task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (task.description && task.description.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -235,10 +239,12 @@ export default function Tasks() {
                   Manage and track your tasks across all projects
                 </p>
               </div>
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Task
-              </Button>
+              {canManageTasks && (
+                <Button onClick={() => setIsCreateModalOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Task
+                </Button>
+              )}
             </div>
 
             {/* Search and filters */}
@@ -295,10 +301,12 @@ export default function Tasks() {
                 ) : filteredTasks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8">
                     <div className="text-muted-foreground mb-4">No tasks found</div>
-                    <Button onClick={() => setIsCreateModalOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create your first task
-                    </Button>
+                    {canManageTasks && (
+                      <Button onClick={() => setIsCreateModalOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create your first task
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <Table>
@@ -363,17 +371,21 @@ export default function Tasks() {
                                   <Eye className="h-4 w-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleEdit(task)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDelete(task.id)}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
+                                {canManageTasks && (
+                                  <>
+                                    <DropdownMenuItem onClick={() => handleEdit(task)}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleDelete(task.id)}
+                                      className="text-destructive"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>

@@ -26,6 +26,8 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { WorkspaceDropdown } from "@/components/WorkspaceDropdown";
 import { projectsApi, tasksApi, Project, Task } from "@/api/projects";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { hasPermission } from "@/components/RBACGuard";
 import { ArrowLeft, Plus, MoreHorizontal, Edit, Trash2, Eye } from "lucide-react";
 
 export default function ProjectDetail() {
@@ -38,6 +40,11 @@ export default function ProjectDetail() {
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // RBAC: Check if user has permission to create/edit/delete projects and tasks
+  const canManageProjects = hasPermission(user?.permissions, "workspace:admin");
+  const canManageTasks = hasPermission(user?.permissions, "workspace:admin");
 
   const loadProject = async () => {
     if (!id) return;
@@ -183,26 +190,28 @@ export default function ProjectDetail() {
                           {project.description || "No description provided"}
                         </CardDescription>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Project
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={handleDeleteProject}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Project
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {canManageProjects && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Project
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={handleDeleteProject}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Project
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -279,20 +288,24 @@ export default function ProjectDetail() {
                       {tasks.length} tasks in this project
                     </CardDescription>
                   </div>
-                  <Button onClick={() => setIsCreateTaskModalOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Task
-                  </Button>
+                  {canManageTasks && (
+                    <Button onClick={() => setIsCreateTaskModalOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Task
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
                 {tasks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8">
                     <div className="text-muted-foreground mb-4">No tasks yet</div>
-                    <Button onClick={() => setIsCreateTaskModalOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create your first task
-                    </Button>
+                    {canManageTasks && (
+                      <Button onClick={() => setIsCreateTaskModalOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create your first task
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <Table>
@@ -336,26 +349,44 @@ export default function ProjectDetail() {
                             {new Date(task.created_at).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDeleteTask(task.id)}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            {canManageTasks ? (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEditTask(task)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeleteTask(task.id)}
+                                    className="text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            ) : (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => navigate(`/dashboard/tasks/${task.id}`)}
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View Details
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
