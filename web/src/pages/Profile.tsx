@@ -40,8 +40,8 @@ const Profile = () => {
   };
 
   const handleAddPasskey = () => {
-    // Redirect to backend endpoint which will redirect to Scalekit passkeys page
-    window.location.href = `${config.backendUrl}/api/scalekit/passkeys`;
+    // Open backend endpoint in new tab, which will redirect to Scalekit passkeys page
+    window.open(`${config.backendUrl}/api/scalekit/passkeys`, '_blank');
   };
 
   const displayName = user?.name || user?.first_name || "User";
@@ -149,23 +149,6 @@ const Profile = () => {
               onUserUpdate={handleUserUpdate}
             />
 
-            {/* Passkeys Section */}
-            <Card className="mb-6">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">Passkeys</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Securely sign-in with on-device biometric authentication.
-                    </p>
-                  </div>
-                  <Button variant="outline" onClick={handleAddPasskey}>
-                    Add passkey
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Organizations Section */}
             <Card>
               <CardHeader>
@@ -211,6 +194,23 @@ const Profile = () => {
                     ))}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+
+            {/* Passkeys Section */}
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">Passkeys</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Securely sign-in with on-device biometric authentication.
+                    </p>
+                  </div>
+                  <Button variant="outline" onClick={handleAddPasskey}>
+                    Manage Passkeys
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
