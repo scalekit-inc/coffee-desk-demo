@@ -105,7 +105,7 @@ export default function Billing() {
   };
 
   return (
-    <RBACGuard requirePermission={["workspace:admin", "workspace:billing"]}>
+    <RBACGuard requirePermission={["organization:settings", "workspace:billing"]}>
       <div className="flex flex-col min-h-screen w-full">
         {/* Top section with logo and organization dropdown */}
         <div className="flex items-center justify-between p-4 border-b bg-background z-10">

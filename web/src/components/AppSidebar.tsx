@@ -12,11 +12,11 @@ const navigationItems = [
 export function AppSidebar() {
   const { user } = useAuth();
   
-  // RBAC: Only show workspace section for users with workspace:admin permission
-  const canAccessWorkspace = hasPermission(user?.permissions, "workspace:admin");
+  // RBAC: Only show workspace section for users with organization:settings permission
+  const canAccessWorkspace = hasPermission(user?.permissions, "organization:settings");
   
-  // RBAC: Show billing section for users with workspace:admin or workspace:billing permission
-  const canAccessBilling = hasPermission(user?.permissions, "workspace:admin") || hasPermission(user?.permissions, "workspace:billing");
+  // RBAC: Show billing section for users with organization:settings or workspace:billing permission
+  const canAccessBilling = hasPermission(user?.permissions, "organization:settings") || hasPermission(user?.permissions, "workspace:billing");
 
   const location = useLocation();
   const currentPath = location.pathname;

@@ -688,7 +688,7 @@ export default function Workspace() {
   const emailInitial = user?.email ? user.email[0].toUpperCase() : "U";
 
   return (
-    <RBACGuard requirePermission="workspace:admin">
+    <RBACGuard requirePermission="organization:settings">
       <TooltipProvider delayDuration={0}>
         <div className="flex flex-col min-h-screen w-full">
       {/* Top section with logo and organization dropdown */}

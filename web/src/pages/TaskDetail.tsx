@@ -30,7 +30,7 @@ export default function TaskDetail() {
   const { user } = useAuth();
 
   // RBAC: Check if user has permission to edit/delete tasks
-  const canManageTasks = hasPermission(user?.permissions, "workspace:admin");
+  const canManageTasks = hasPermission(user?.permissions, "organization:settings");
 
   const loadTask = async () => {
     if (!id) return;

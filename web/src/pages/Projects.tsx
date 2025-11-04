@@ -121,7 +121,7 @@ export default function Projects() {
   const emailInitial = user?.email ? user.email[0].toUpperCase() : "U";
 
   // RBAC: Check if user has permission to create/edit/delete projects
-  const canManageProjects = hasPermission(user?.permissions, "workspace:admin");
+  const canManageProjects = hasPermission(user?.permissions, "organization:settings");
 
   const filteredProjects = projects.filter((project) =>
     project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

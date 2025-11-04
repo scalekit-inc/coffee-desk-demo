@@ -149,7 +149,7 @@ export default function Tasks() {
   const emailInitial = user?.email ? user.email[0].toUpperCase() : "U";
 
   // RBAC: Check if user has permission to create/edit/delete tasks
-  const canManageTasks = hasPermission(user?.permissions, "workspace:admin");
+  const canManageTasks = hasPermission(user?.permissions, "organization:settings");
 
   const filteredTasks = tasks.filter((task) =>
     task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

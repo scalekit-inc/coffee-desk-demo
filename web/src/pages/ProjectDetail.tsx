@@ -43,8 +43,8 @@ export default function ProjectDetail() {
   const { user } = useAuth();
 
   // RBAC: Check if user has permission to create/edit/delete projects and tasks
-  const canManageProjects = hasPermission(user?.permissions, "workspace:admin");
-  const canManageTasks = hasPermission(user?.permissions, "workspace:admin");
+  const canManageProjects = hasPermission(user?.permissions, "organization:settings");
+  const canManageTasks = hasPermission(user?.permissions, "organization:settings");
 
   const loadProject = async () => {
     if (!id) return;
