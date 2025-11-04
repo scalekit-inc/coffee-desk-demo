@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Settings, CreditCard, FolderOpen, CheckSquare, Building2, Shield, Cog } from "lucide-react";
+import { LayoutDashboard, Users, Settings, FolderOpen, CheckSquare, Building2, Shield, Cog } from "lucide-react";
 import { NavLink, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { hasPermission } from "./RBACGuard";
@@ -21,9 +21,6 @@ export function AppSidebar() {
   
   // RBAC: Only show workspace section for users with organization:settings permission
   const canAccessWorkspace = hasPermission(user?.permissions, "organization:settings");
-  
-  // RBAC: Show billing section for users with organization:settings or workspace:billing permission
-  const canAccessBilling = hasPermission(user?.permissions, "organization:settings") || hasPermission(user?.permissions, "workspace:billing");
 
   const location = useLocation();
   const currentPath = location.pathname;
@@ -103,24 +100,15 @@ export function AppSidebar() {
       {/* Bottom Settings Section */}
       <div className="mt-auto">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Settings
+          User Settings
         </h3>
         <nav className="space-y-1">
-          {canAccessBilling && (
-            <Link
-              to="/dashboard/billing"
-              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses("/dashboard/billing")}`}
-            >
-              <CreditCard className="h-4 w-4" />
-              <span>Billing</span>
-            </Link>
-          )}
           <NavLink 
             to="/dashboard/profile" 
             className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses("/dashboard/profile")}`}
           >
             <Users className="h-4 w-4" />
-            <span>My Profile</span>
+            <span>User Profile</span>
           </NavLink>
         </nav>
       </div>
