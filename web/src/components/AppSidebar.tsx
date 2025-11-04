@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Settings, CreditCard, FolderOpen, CheckSquare } from "lucide-react";
+import { LayoutDashboard, Users, Settings, CreditCard, FolderOpen, CheckSquare, Building2, Shield, Cog } from "lucide-react";
 import { NavLink, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { hasPermission } from "./RBACGuard";
@@ -7,6 +7,13 @@ const navigationItems = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
   { title: "Projects", url: "/dashboard/projects", icon: FolderOpen },
   { title: "Tasks", url: "/dashboard/tasks", icon: CheckSquare },
+];
+
+const organizationSettingsItems = [
+  { title: "General", url: "/dashboard/workspace", icon: Building2 },
+  { title: "Members", url: "/dashboard/workspace/members", icon: Users },
+  { title: "Security", url: "/dashboard/workspace/security", icon: Shield },
+  { title: "Advanced", url: "/dashboard/workspace/settings", icon: Cog },
 ];
 
 export function AppSidebar() {
@@ -24,6 +31,10 @@ export function AppSidebar() {
   const isActive = (path: string) => {
     if (path === "/dashboard") {
       return currentPath === "/dashboard";
+    }
+    // For workspace routes, exact match for general, otherwise check if path starts with the route
+    if (path === "/dashboard/workspace") {
+      return currentPath === "/dashboard/workspace";
     }
     return currentPath.startsWith(path);
   };
@@ -68,21 +79,33 @@ export function AppSidebar() {
         </nav>
       </div>
 
+      {/* Organization Settings Section */}
+      {canAccessWorkspace && (
+        <div>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Organization Settings
+          </h3>
+          <nav className="space-y-1">
+            {organizationSettingsItems.map((item) => (
+              <NavLink 
+                key={item.title}
+                to={item.url} 
+                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses(item.url)}`}
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+      )}
+
       {/* Bottom Settings Section */}
       <div className="mt-auto">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           Settings
         </h3>
         <nav className="space-y-1">
-          {canAccessWorkspace && (
-            <Link
-              to="/dashboard/workspace"
-              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses("/dashboard/workspace")}`}
-            >
-              <Settings className="h-4 w-4" />
-              <span>Organization</span>
-            </Link>
-          )}
           {canAccessBilling && (
             <Link
               to="/dashboard/billing"

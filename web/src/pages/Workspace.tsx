@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -124,8 +123,8 @@ export default function Workspace() {
     }
   }, [workspaceData]);
 
-  // Determine the active tab based on URL
-  const getActiveTab = () => {
+  // Determine the active section based on URL
+  const getActiveSection = () => {
     if (location.pathname === '/dashboard/workspace/members') {
       return 'members';
     }
@@ -135,23 +134,7 @@ export default function Workspace() {
     if (location.pathname === '/dashboard/workspace/settings') {
       return 'advanced';
     }
-    return 'general'; // default tab
-  };
-
-  const handleTabChange = (value: string) => {
-    switch (value) {
-      case 'members':
-        navigate('/dashboard/workspace/members');
-        break;
-      case 'security':
-        navigate('/dashboard/workspace/security');
-        break;
-      case 'advanced':
-        navigate('/dashboard/workspace/settings');
-        break;
-      default:
-        navigate('/dashboard/workspace');
-    }
+    return 'general'; // default section
   };
 
   const fetchMembers = async () => {
@@ -764,19 +747,9 @@ export default function Workspace() {
         {/* Main content area */}
         <div className="flex-1 overflow-auto">
           <div className="p-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-semibold">Organization Settings</h1>
-            </div>
-
-            <Tabs defaultValue={getActiveTab()} className="space-y-6" value={getActiveTab()} onValueChange={handleTabChange}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="members">Members</TabsTrigger>
-                <TabsTrigger value="security">Security</TabsTrigger>
-                <TabsTrigger value="advanced">Advanced</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="general" className="space-y-6">
+            <div className="space-y-6">
+              {getActiveSection() === 'general' && (
+              <div className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Organization Settings</CardTitle>
@@ -844,9 +817,11 @@ export default function Workspace() {
                     </div> */}
                   </CardContent>
                 </Card>
-              </TabsContent>
+              </div>
+              )}
 
-              <TabsContent value="members" className="space-y-6">
+              {getActiveSection() === 'members' && (
+              <div className="space-y-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
@@ -957,9 +932,11 @@ export default function Workspace() {
                     )}
                   </CardContent>
                 </Card>
-              </TabsContent>
+              </div>
+              )}
 
-              <TabsContent value="security" className="space-y-6">
+              {getActiveSection() === 'security' && (
+              <div className="space-y-6">
                 {/* Allowed Email Domains Section */}
                 <Card>
                   <CardHeader>
@@ -1033,71 +1010,66 @@ export default function Workspace() {
                     )}
                   </CardContent>
                 </Card>
-              </TabsContent>
+              </div>
+              )}
 
-              <TabsContent value="advanced" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Advanced Settings</CardTitle>
-                    <CardDescription>Configure advanced organization settings including SSO and SCIM</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {portalLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                        <span className="ml-2">Loading configuration...</span>
-                      </div>
-                    ) : portalError ? (
-                      <div className="text-center py-8">
-                        <p className="text-destructive">{portalError}</p>
-                        {retryCount < MAX_RETRIES ? (
-                          <>
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mt-4"></div>
-                            <p className="text-sm text-muted-foreground mt-2">
-                              Retrying... ({retryCount + 1}/{MAX_RETRIES})
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-sm text-muted-foreground mt-2">
-                              Failed to load after {MAX_RETRIES} attempts
-                            </p>
-                            <Button 
-                              onClick={() => {
-                                setRetryCount(0);
-                                setPortalError(null);
-                                setHasFetchedPortal(false);
-                                fetchPortalLink();
-                              }} 
-                              className="mt-2"
-                            >
-                              Try Again
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    ) : portalUrl ? (
-                      <div className="w-full">
-                        <iframe
-                          src={portalUrl}
-                          className="w-full h-[600px] border rounded-lg"
-                          title="Advanced Configuration"
-                          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                        />
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">
-                          No portal URL available.
-                        </p>
+              {getActiveSection() === 'advanced' && (
+              <div className="space-y-6">
+                {portalLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <span className="ml-2">Loading configuration...</span>
+                  </div>
+                ) : portalError ? (
+                  <div className="text-center py-8">
+                    <p className="text-destructive">{portalError}</p>
+                    {retryCount < MAX_RETRIES ? (
+                      <>
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mt-4"></div>
-                        <p className="text-sm text-muted-foreground mt-2">Loading configuration...</p>
-                      </div>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Retrying... ({retryCount + 1}/{MAX_RETRIES})
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Failed to load after {MAX_RETRIES} attempts
+                        </p>
+                        <Button 
+                          onClick={() => {
+                            setRetryCount(0);
+                            setPortalError(null);
+                            setHasFetchedPortal(false);
+                            fetchPortalLink();
+                          }} 
+                          className="mt-2"
+                        >
+                          Try Again
+                        </Button>
+                      </>
                     )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                  </div>
+                ) : portalUrl ? (
+                  <div className="w-full">
+                    <iframe
+                      src={portalUrl}
+                      className="w-full h-[600px] border rounded-lg"
+                      title="Advanced Configuration"
+                      sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">
+                      No portal URL available.
+                    </p>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mt-4"></div>
+                    <p className="text-sm text-muted-foreground mt-2">Loading configuration...</p>
+                  </div>
+                )}
+              </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
