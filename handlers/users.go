@@ -230,7 +230,19 @@ func CreateWorkspaceMemberHandler(c *gin.Context) {
 	if err := database.DB.Create(&localUser).Error; err != nil {
 		log.Printf("Error creating user in local database: %v", err)
 		// Don't fail the request, just log the error
-
+	} else {
+		// Update ScaleKit to set external_id to local database ID
+		localUserIDStr := localUser.ID.String()
+		updateUserRequest := &usersv1.UpdateUser{
+			ExternalId: &localUserIDStr,
+		}
+		
+		if _, err := scalekitClient.User().UpdateUser(context.Background(), response.User.Id, updateUserRequest); err != nil {
+			log.Printf("Error updating external_id in ScaleKit: %v", err)
+			// Continue even if ScaleKit update fails
+		} else {
+			log.Printf("Successfully updated external_id in ScaleKit for user %s", response.User.Id)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"user_id": response.User.Id})

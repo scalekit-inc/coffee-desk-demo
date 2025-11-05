@@ -152,7 +152,20 @@ func OnboardingHandler(c *gin.Context) {
 
 	if err := database.DB.Create(&localUser).Error; err != nil {
 		log.Printf("Error creating user in local database: %v", err)
+		// Continue even if local DB creation fails
+	} else {
+		// Update ScaleKit to set external_id to local database ID
+		localUserIDStr := localUser.ID.String()
+		updateUserRequest := &usersv1.UpdateUser{
+			ExternalId: &localUserIDStr,
+		}
 
+		if _, err := scalekitClient.User().UpdateUser(context.Background(), userID, updateUserRequest); err != nil {
+			log.Printf("Error updating external_id in ScaleKit: %v", err)
+			// Continue even if ScaleKit update fails
+		} else {
+			log.Printf("Successfully updated external_id in ScaleKit for user %s", userID)
+		}
 	}
 
 	// Try to get user email from Scalekit and update local record
@@ -160,7 +173,7 @@ func OnboardingHandler(c *gin.Context) {
 	if err == nil && userResponse.User.Email != "" {
 		if err := database.DB.Model(&database.User{}).Where("external_id = ?", userID).Update("email", userResponse.User.Email).Error; err != nil {
 			log.Printf("Error updating user email in local database: %v", err)
-
+			// Continue even if email update fails
 		}
 	}
 
