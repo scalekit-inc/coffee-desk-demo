@@ -45,6 +45,14 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	// Enforce HTTPS
+	r.Use(func(c *gin.Context) {
+		if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
+			c.Writer.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+		c.Next()
+	})
+
 	// Set up HTML renderer with templates
 	r.SetHTMLTemplate(templates.Templates)
 
