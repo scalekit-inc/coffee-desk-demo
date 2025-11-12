@@ -752,7 +752,12 @@ export default function Workspace() {
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Organization Settings</CardTitle>
+                    <div className="flex items-center gap-3">
+                      <CardTitle>Organization Settings</CardTitle>
+                      <span className="inline-flex items-center text-sm font-semibold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full shadow-sm">
+                        Powered by Scalekit
+                      </span>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-4">
@@ -824,8 +829,11 @@ export default function Workspace() {
               <div className="space-y-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
+                    <div className="flex items-center gap-3">
                       <CardTitle>Members</CardTitle>
+                      <span className="inline-flex items-center text-sm font-semibold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full shadow-sm">
+                        Powered by Scalekit
+                      </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="relative">
@@ -940,10 +948,19 @@ export default function Workspace() {
                 {/* Allowed Email Domains Section */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Allowed Email Domains</CardTitle>
-                    <CardDescription>
-                      Anyone with email addresses at these domains can automatically join this organization.
-                    </CardDescription>
+                    <div className="flex items-start gap-3">
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <CardTitle>Allowed Email Domains</CardTitle>
+                          <span className="inline-flex items-center text-sm font-semibold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full shadow-sm">
+                            Powered by Scalekit
+                          </span>
+                        </div>
+                        <CardDescription>
+                          Anyone with email addresses at these domains can automatically join this organization.
+                        </CardDescription>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Add Domain Input */}
@@ -1015,6 +1032,12 @@ export default function Workspace() {
 
               {getActiveSection() === 'advanced' && (
               <div className="space-y-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-2xl font-semibold">Enterprise Auth</h2>
+                  <span className="inline-flex items-center text-sm font-semibold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full shadow-sm">
+                    Powered by Scalekit
+                  </span>
+                </div>
                 {portalLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

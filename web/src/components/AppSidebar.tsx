@@ -13,7 +13,7 @@ const organizationSettingsItems = [
   { title: "General", url: "/dashboard/workspace", icon: Building2 },
   { title: "Members", url: "/dashboard/workspace/members", icon: Users },
   { title: "Security", url: "/dashboard/workspace/security", icon: Shield },
-  { title: "Advanced", url: "/dashboard/workspace/settings", icon: Cog },
+  { title: "Enterprise Auth", url: "/dashboard/workspace/settings", icon: Cog },
 ];
 
 export function AppSidebar() {

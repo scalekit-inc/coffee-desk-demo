@@ -141,7 +141,12 @@ const Profile = () => {
         {/* Main content area */}
         <div className="flex-1 overflow-auto">
           <div className="p-6">
-            <h1 className="text-2xl font-semibold mb-6">My Profile</h1>
+            <div className="flex items-center gap-3 mb-6">
+              <h1 className="text-2xl font-semibold">My Profile</h1>
+              <span className="inline-flex items-center text-sm font-semibold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full shadow-sm">
+                Powered by Scalekit
+              </span>
+            </div>
             
             {/* User Profile Section */}
             <EditableUserProfile 
