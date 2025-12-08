@@ -9,6 +9,7 @@ import ProjectDetail from "./pages/ProjectDetail";
 import Tasks from "./pages/Tasks";
 import TaskDetail from "./pages/TaskDetail";
 import NotFound from "./pages/NotFound";
+import Connections from "./pages/Connections";
 import { AuthWrapper } from "./components/AuthWrapper";
 
 const App = () => (
@@ -38,6 +39,14 @@ const App = () => (
             <Profile />
           </AuthWrapper>
         } 
+      />
+      <Route
+      path ="/dashboard/connections"
+      element={
+        <AuthWrapper requireAuth={true}>
+          <Connections />
+        </AuthWrapper>
+      }
       />
       <Route 
         path="/dashboard/workspace" 

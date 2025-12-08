@@ -679,7 +679,11 @@ export default function Workspace() {
         <div className="flex items-center gap-4">
           {/* App logo in top-left */}
           <img 
+<<<<<<< Updated upstream
             src="/uploads/coffee-desk-name-icon.png" 
+=======
+            src="/uploads/name_icon.png" 
+>>>>>>> Stashed changes
             alt="Coffeedesk Logo" 
             className="h-8 w-auto"
           />

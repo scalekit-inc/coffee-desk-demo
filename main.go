@@ -21,6 +21,12 @@ func main() {
 		panic(fmt.Sprintf("Failed to initialize ScaleKit client: %v", err))
 	}
 
+	// Initialize connections handler
+	connectionsHandler, err := handlers.NewConnectionsHandler()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to initialize connections handler: %v", err))
+	}
+
 	// Initialize database
 	if err := database.InitDatabase(); err != nil {
 		panic(fmt.Sprintf("Failed to initialize database: %v", err))
@@ -37,7 +43,7 @@ func main() {
 
 	// Configure CORS (can be reduced since we're serving from same origin)
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, // Allow all origins in production
+		AllowOrigins:     []string{"*", "https://roxane-pilonidal-mildred.ngrok-free.dev/"}, // Allow all origins in production
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -109,6 +115,7 @@ func main() {
 		api.GET("/scalekit/callback", handlers.CallbackHandler)
 		api.GET("/session", handlers.SessionHandler)
 		api.GET("/logout", handlers.LogoutHandler)
+		api.POST("/webhooks/scalekit", handlers.ScalekitWebhookHandler)
 		api.GET("/workspace/members", handlers.GetWorkspaceMembersHandler)
 		api.POST("/workspace/members", handlers.CreateWorkspaceMemberHandler)
 		api.DELETE("/workspace/members/:member_id", handlers.DeleteWorkspaceMemberHandler)
@@ -123,6 +130,10 @@ func main() {
 		api.GET("/scalekit/environment-url", handlers.GetScaleKitEnvironmentURLHandler)
 		api.GET("/scalekit/passkeys", handlers.RedirectToPasskeysHandler)
 		api.POST("/workspace/onboarding", handlers.OnboardingHandler)
+
+		//
+		// Connections routes - registers /api/connections/* endpoints
+		connectionsHandler.RegisterRoutes(api)
 
 		// Project Management API routes
 		api.GET("/projects", handlers.GetProjectsHandler)
