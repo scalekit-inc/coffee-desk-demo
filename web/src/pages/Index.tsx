@@ -39,8 +39,8 @@ const handleAuth = (type: 'signin' | 'signup') => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <img 
-                src="/uploads/fe8916e1-c333-4b24-9051-655a97f99240.png" 
-                alt="DevRamp Logo" 
+                src="/uploads/coffee-desk-name-icon.png" 
+                alt="Coffeedesk Logo" 
                 className="h-8 w-auto"
               />
             </div>
@@ -164,7 +164,7 @@ const handleAuth = (type: 'signin' | 'signup') => {
             Ready to Transform Your Business?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Join thousands of companies already using DevRamp to streamline operations and drive growth.
+            Join thousands of companies already using Coffee desk to streamline operations and drive growth.
           </p>
           <Button size="lg" variant="secondary" className="text-lg px-8 py-6">
             Start Your Free Trial Today
@@ -179,8 +179,8 @@ const handleAuth = (type: 'signin' | 'signup') => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <img 
-                src="/uploads/fe8916e1-c333-4b24-9051-655a97f99240.png" 
-                alt="DevRamp Logo" 
+                src="/uploads/coffee-desk-name-icon.png" 
+                alt="Coffeedesk Logo" 
                 className="h-8 w-auto mb-4"
               />
               <p className="text-muted-foreground mb-4">
@@ -215,7 +215,7 @@ const handleAuth = (type: 'signin' | 'signup') => {
             </div>
           </div>
           <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground">
-            <p>&copy; 2024 DevRamp. All rights reserved.</p>
+            <p>&copy; 2024 Coffee Desk. All rights reserved.</p>
           </div>
         </div>
       </footer>

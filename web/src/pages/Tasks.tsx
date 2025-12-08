@@ -35,6 +35,7 @@ import { WorkspaceDropdown } from "@/components/WorkspaceDropdown";
 import { tasksApi, projectsApi, Task, Project } from "@/api/projects";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { hasPermission } from "@/components/RBACGuard";
 import { config } from "@/config";
 import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, User, LogOut } from "lucide-react";
 
@@ -147,6 +148,9 @@ export default function Tasks() {
   // Get first letter of email for profile icon
   const emailInitial = user?.email ? user.email[0].toUpperCase() : "U";
 
+  // RBAC: Check if user has permission to create/edit/delete tasks
+  const canManageTasks = hasPermission(user?.permissions, "organization:settings");
+
   const filteredTasks = tasks.filter((task) =>
     task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (task.description && task.description.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -154,17 +158,17 @@ export default function Tasks() {
 
   return (
     <div className="flex flex-col min-h-screen w-full">
-      {/* Top section with logo and workspace dropdown */}
+      {/* Top section with logo and organization dropdown */}
       <div className="flex items-center justify-between p-4 border-b bg-background z-10">
         <div className="flex items-center gap-4">
           {/* App logo in top-left */}
           <img 
-            src="/uploads/fe8916e1-c333-4b24-9051-655a97f99240.png" 
-            alt="DevRamp Logo" 
+            src="/uploads/coffee-desk-name-icon.png" 
+            alt="Coffeedesk Logo" 
             className="h-8 w-auto"
           />
           
-          {/* Workspace switcher immediately next to logo */}
+          {/* Organization switcher immediately next to logo */}
           <WorkspaceDropdown />
         </div>
         
@@ -235,10 +239,12 @@ export default function Tasks() {
                   Manage and track your tasks across all projects
                 </p>
               </div>
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Task
-              </Button>
+              {canManageTasks && (
+                <Button onClick={() => setIsCreateModalOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Task
+                </Button>
+              )}
             </div>
 
             {/* Search and filters */}
@@ -295,10 +301,12 @@ export default function Tasks() {
                 ) : filteredTasks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8">
                     <div className="text-muted-foreground mb-4">No tasks found</div>
-                    <Button onClick={() => setIsCreateModalOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create your first task
-                    </Button>
+                    {canManageTasks && (
+                      <Button onClick={() => setIsCreateModalOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create your first task
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <Table>
@@ -363,17 +371,21 @@ export default function Tasks() {
                                   <Eye className="h-4 w-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleEdit(task)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDelete(task.id)}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
+                                {canManageTasks && (
+                                  <>
+                                    <DropdownMenuItem onClick={() => handleEdit(task)}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleDelete(task.id)}
+                                      className="text-destructive"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>

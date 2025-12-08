@@ -3,7 +3,6 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Workspace from "./pages/Workspace";
-import Billing from "./pages/Billing";
 import Onboarding from "./pages/Onboarding";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -69,14 +68,6 @@ const App = () => (
         element={
           <AuthWrapper requireAuth={true}>
             <Workspace />
-          </AuthWrapper>
-        } 
-      />
-      <Route 
-        path="/dashboard/billing" 
-        element={
-          <AuthWrapper requireAuth={true}>
-            <Billing />
           </AuthWrapper>
         } 
       />

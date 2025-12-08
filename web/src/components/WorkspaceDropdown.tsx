@@ -60,14 +60,14 @@ export function WorkspaceDropdown() {
                 </span>
               </div>
               <span className="font-medium text-foreground">
-                {currentWorkspace?.display_name || "Workspace"}
+                {currentWorkspace?.display_name || "Organization"}
               </span>
             </div>
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-64 bg-background border shadow-lg" align="start">
-          <DropdownMenuLabel>Switch Workspace</DropdownMenuLabel>
+          <DropdownMenuLabel>Switch Organization</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {workspaces.map((workspace) => (
             <DropdownMenuItem
@@ -96,7 +96,7 @@ export function WorkspaceDropdown() {
               <div className="w-6 h-6 border-2 border-dashed border-muted-foreground rounded-md flex items-center justify-center">
                 <Plus className="h-3 w-3 text-muted-foreground" />
               </div>
-              <span>Create new workspace</span>
+              <span>Create new organization</span>
             </div>
           </DropdownMenuItem>
         </DropdownMenuContent>

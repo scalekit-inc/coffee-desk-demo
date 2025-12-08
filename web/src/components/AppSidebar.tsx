@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Settings, CreditCard, FolderOpen, CheckSquare } from "lucide-react";
+import { LayoutDashboard, Users, Settings, FolderOpen, CheckSquare, Building2, Shield, Cog } from "lucide-react";
 import { NavLink, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { hasPermission } from "./RBACGuard";
@@ -9,14 +9,18 @@ const navigationItems = [
   { title: "Tasks", url: "/dashboard/tasks", icon: CheckSquare },
 ];
 
+const organizationSettingsItems = [
+  { title: "General", url: "/dashboard/workspace", icon: Building2 },
+  { title: "Members", url: "/dashboard/workspace/members", icon: Users },
+  { title: "Security", url: "/dashboard/workspace/security", icon: Shield },
+  { title: "Enterprise Auth", url: "/dashboard/workspace/settings", icon: Cog },
+];
+
 export function AppSidebar() {
   const { user } = useAuth();
   
-  // RBAC: Only show workspace section for users with workspace:admin permission
-  const canAccessWorkspace = hasPermission(user?.permissions, "workspace:admin");
-  
-  // RBAC: Show billing section for users with workspace:admin or workspace:billing permission
-  const canAccessBilling = hasPermission(user?.permissions, "workspace:admin") || hasPermission(user?.permissions, "workspace:billing");
+  // RBAC: Only show workspace section for users with organization:settings permission
+  const canAccessWorkspace = hasPermission(user?.permissions, "organization:settings");
 
   const location = useLocation();
   const currentPath = location.pathname;
@@ -24,6 +28,10 @@ export function AppSidebar() {
   const isActive = (path: string) => {
     if (path === "/dashboard") {
       return currentPath === "/dashboard";
+    }
+    // For workspace routes, exact match for general, otherwise check if path starts with the route
+    if (path === "/dashboard/workspace") {
+      return currentPath === "/dashboard/workspace";
     }
     return currentPath.startsWith(path);
   };
@@ -68,36 +76,39 @@ export function AppSidebar() {
         </nav>
       </div>
 
+      {/* Organization Settings Section */}
+      {canAccessWorkspace && (
+        <div>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Organization Settings
+          </h3>
+          <nav className="space-y-1">
+            {organizationSettingsItems.map((item) => (
+              <NavLink 
+                key={item.title}
+                to={item.url} 
+                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses(item.url)}`}
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+      )}
+
       {/* Bottom Settings Section */}
       <div className="mt-auto">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Settings
+          User Settings
         </h3>
         <nav className="space-y-1">
-          {canAccessWorkspace && (
-            <Link
-              to="/dashboard/workspace"
-              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses("/dashboard/workspace")}`}
-            >
-              <Settings className="h-4 w-4" />
-              <span>Workspace</span>
-            </Link>
-          )}
-          {canAccessBilling && (
-            <Link
-              to="/dashboard/billing"
-              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses("/dashboard/billing")}`}
-            >
-              <CreditCard className="h-4 w-4" />
-              <span>Billing</span>
-            </Link>
-          )}
           <NavLink 
             to="/dashboard/profile" 
             className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses("/dashboard/profile")}`}
           >
             <Users className="h-4 w-4" />
-            <span>My Profile</span>
+            <span>User Profile</span>
           </NavLink>
         </nav>
       </div>

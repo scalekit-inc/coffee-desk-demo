@@ -87,17 +87,17 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col min-h-screen w-full">
-      {/* Top section with logo and workspace dropdown */}
+      {/* Top section with logo and organization dropdown */}
       <div className="flex items-center justify-between p-4 border-b bg-background z-10">
         <div className="flex items-center gap-4">
           {/* App logo in top-left */}
           <img 
-            src="/uploads/fe8916e1-c333-4b24-9051-655a97f99240.png" 
-            alt="DevRamp Logo" 
+            src="/uploads/coffee-desk-name-icon.png" 
+            alt="Coffeedesk Logo" 
             className="h-8 w-auto"
           />
           
-          {/* Workspace switcher immediately next to logo */}
+          {/* Organization switcher immediately next to logo */}
           <WorkspaceDropdown />
         </div>
         
@@ -282,7 +282,7 @@ const Dashboard = () => {
                       onClick={() => navigate("/dashboard/workspace")}
                     >
                       <Users className="h-6 w-6 mb-2" />
-                      Workspace
+                      Organization
                     </Button>
                     <Button 
                       variant="outline" 

@@ -20,7 +20,7 @@ func Uploads() (fs.FS, error) {
 	return fs.Sub(uploads, "uploads")
 }
 
-//go:embed favicon.ico robots.txt placeholder.svg
+//go:embed robots.txt placeholder.svg
 var rootFiles embed.FS
 
 func RootFiles() (fs.FS, error) {

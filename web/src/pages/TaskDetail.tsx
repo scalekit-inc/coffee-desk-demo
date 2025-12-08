@@ -16,6 +16,8 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { WorkspaceDropdown } from "@/components/WorkspaceDropdown";
 import { tasksApi, Task } from "@/api/projects";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { hasPermission } from "@/components/RBACGuard";
 import { ArrowLeft, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 
 export default function TaskDetail() {
@@ -25,6 +27,10 @@ export default function TaskDetail() {
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // RBAC: Check if user has permission to edit/delete tasks
+  const canManageTasks = hasPermission(user?.permissions, "organization:settings");
 
   const loadTask = async () => {
     if (!id) return;
@@ -91,17 +97,17 @@ export default function TaskDetail() {
 
   return (
     <div className="flex flex-col min-h-screen w-full">
-      {/* Top section with logo and workspace dropdown */}
+      {/* Top section with logo and organization dropdown */}
       <div className="flex items-center justify-between p-4 border-b bg-background z-10">
         <div className="flex items-center gap-4">
           {/* App logo in top-left */}
           <img 
-            src="/uploads/fe8916e1-c333-4b24-9051-655a97f99240.png" 
-            alt="DevRamp Logo" 
+            src="/uploads/coffee-desk-name-icon.png" 
+            alt="Coffeedesk Logo" 
             className="h-8 w-auto"
           />
           
-          {/* Workspace switcher immediately next to logo */}
+          {/* Organization switcher immediately next to logo */}
           <WorkspaceDropdown />
         </div>
       </div>
@@ -139,26 +145,28 @@ export default function TaskDetail() {
                           {task.description || "No description provided"}
                         </CardDescription>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Task
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={handleDelete}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Task
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {canManageTasks && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Task
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={handleDelete}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Task
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>

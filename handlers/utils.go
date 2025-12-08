@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 
@@ -78,4 +79,27 @@ func toExternalWorkspaceID(organizationID string) (string, error) {
 		return "", fmt.Errorf("invalid organization ID format: %s", organizationID)
 	}
 	return "wspace_" + parts[1], nil
+}
+
+// GetScaleKitEnvironmentURLHandler returns the SCALEKIT_ENVIRONMENT_URL for frontend use
+func GetScaleKitEnvironmentURLHandler(c *gin.Context) {
+	envURL := os.Getenv("SCALEKIT_ENVIRONMENT_URL")
+	if envURL == "" {
+		c.JSON(500, gin.H{"error": "SCALEKIT_ENVIRONMENT_URL not configured"})
+		return
+	}
+	c.JSON(200, gin.H{"url": envURL})
+}
+
+// RedirectToPasskeysHandler redirects to the Scalekit passkeys page
+func RedirectToPasskeysHandler(c *gin.Context) {
+	envURL := os.Getenv("SCALEKIT_ENVIRONMENT_URL")
+	if envURL == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "SCALEKIT_ENVIRONMENT_URL not configured"})
+		return
+	}
+
+	// Construct the passkeys URL and redirect
+	passkeysURL := fmt.Sprintf("%s/ui/profile/passkeys", envURL)
+	c.Redirect(http.StatusTemporaryRedirect, passkeysURL)
 }

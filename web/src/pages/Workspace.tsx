@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -124,8 +123,8 @@ export default function Workspace() {
     }
   }, [workspaceData]);
 
-  // Determine the active tab based on URL
-  const getActiveTab = () => {
+  // Determine the active section based on URL
+  const getActiveSection = () => {
     if (location.pathname === '/dashboard/workspace/members') {
       return 'members';
     }
@@ -135,23 +134,7 @@ export default function Workspace() {
     if (location.pathname === '/dashboard/workspace/settings') {
       return 'advanced';
     }
-    return 'general'; // default tab
-  };
-
-  const handleTabChange = (value: string) => {
-    switch (value) {
-      case 'members':
-        navigate('/dashboard/workspace/members');
-        break;
-      case 'security':
-        navigate('/dashboard/workspace/security');
-        break;
-      case 'advanced':
-        navigate('/dashboard/workspace/settings');
-        break;
-      default:
-        navigate('/dashboard/workspace');
-    }
+    return 'general'; // default section
   };
 
   const fetchMembers = async () => {
@@ -507,7 +490,7 @@ export default function Workspace() {
 
   const handleSaveWorkspace = async () => {
     if (!workspaceData?.id || !workspaceName.trim()) {
-      toast.error("Workspace name cannot be empty");
+      toast.error("Organization name cannot be empty");
       return;
     }
 
@@ -526,15 +509,15 @@ export default function Workspace() {
       });
 
       if (response.ok) {
-        toast.success('Workspace name updated successfully');
+        toast.success('Organization name updated successfully');
         // You might want to refresh the workspace data here
         // or update the local state if you have a way to refresh workspaces
       } else {
-        toast.error(`Failed to update workspace: ${response.status}`);
+        toast.error(`Failed to update organization: ${response.status}`);
       }
     } catch (error) {
-      console.error("Failed to update workspace:", error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update workspace');
+      console.error("Failed to update organization:", error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update organization');
     } finally {
       setIsSaving(false);
     }
@@ -688,20 +671,20 @@ export default function Workspace() {
   const emailInitial = user?.email ? user.email[0].toUpperCase() : "U";
 
   return (
-    <RBACGuard requirePermission="workspace:admin">
+    <RBACGuard requirePermission="organization:settings">
       <TooltipProvider delayDuration={0}>
         <div className="flex flex-col min-h-screen w-full">
-      {/* Top section with logo and workspace dropdown */}
+      {/* Top section with logo and organization dropdown */}
       <div className="flex items-center justify-between p-4 border-b bg-background z-10">
         <div className="flex items-center gap-4">
           {/* App logo in top-left */}
           <img 
-            src="/uploads/fe8916e1-c333-4b24-9051-655a97f99240.png" 
-            alt="DevRamp Logo" 
+            src="/uploads/coffee-desk-name-icon.png" 
+            alt="Coffeedesk Logo" 
             className="h-8 w-auto"
           />
           
-          {/* Workspace switcher immediately next to logo */}
+          {/* Organization switcher immediately next to logo */}
           <WorkspaceDropdown />
         </div>
         
@@ -754,7 +737,7 @@ export default function Workspace() {
         </div>
       </div>
 
-      {/* Main content area with sidebar and workspace content */}
+      {/* Main content area with sidebar and organization content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className="w-64 flex-shrink-0 border-r bg-background">
@@ -764,28 +747,23 @@ export default function Workspace() {
         {/* Main content area */}
         <div className="flex-1 overflow-auto">
           <div className="p-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-semibold">Workspace Settings</h1>
-            </div>
-
-            <Tabs defaultValue={getActiveTab()} className="space-y-6" value={getActiveTab()} onValueChange={handleTabChange}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="members">Members</TabsTrigger>
-                <TabsTrigger value="security">Security</TabsTrigger>
-                <TabsTrigger value="advanced">Advanced</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="general" className="space-y-6">
+            <div className="space-y-6">
+              {getActiveSection() === 'general' && (
+              <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Workspace Settings</CardTitle>
+                    <div className="flex items-center gap-3">
+                      <CardTitle>Organization Settings</CardTitle>
+                      <span className="inline-flex items-center text-sm font-semibold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full shadow-sm">
+                        Powered by Scalekit
+                      </span>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="text-sm font-medium">Workspace Logo</h3>
+                          <h3 className="text-sm font-medium">Organization Logo</h3>
                           <p className="text-xs text-muted-foreground">Recommended image size: 200x200px</p>
                         </div>
                         <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
@@ -796,18 +774,18 @@ export default function Workspace() {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Workspace name</label>
+                        <label className="text-sm font-medium">Organization name</label>
                         <input 
                           type="text" 
                           value={workspaceName}
                           onChange={(e) => setWorkspaceName(e.target.value)}
                           className="w-full px-3 py-2 border rounded-md"
-                          placeholder="Enter workspace name"
+                          placeholder="Enter organization name"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Workspace ID</label>
+                        <label className="text-sm font-medium">Organization ID</label>
                         <input 
                           type="text" 
                           value={workspaceData?.id || ""}
@@ -844,13 +822,18 @@ export default function Workspace() {
                     </div> */}
                   </CardContent>
                 </Card>
-              </TabsContent>
+              </div>
+              )}
 
-              <TabsContent value="members" className="space-y-6">
+              {getActiveSection() === 'members' && (
+              <div className="space-y-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
+                    <div className="flex items-center gap-3">
                       <CardTitle>Members</CardTitle>
+                      <span className="inline-flex items-center text-sm font-semibold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full shadow-sm">
+                        Powered by Scalekit
+                      </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="relative">
@@ -957,16 +940,27 @@ export default function Workspace() {
                     )}
                   </CardContent>
                 </Card>
-              </TabsContent>
+              </div>
+              )}
 
-              <TabsContent value="security" className="space-y-6">
+              {getActiveSection() === 'security' && (
+              <div className="space-y-6">
                 {/* Allowed Email Domains Section */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Allowed Email Domains</CardTitle>
-                    <CardDescription>
-                      Anyone with email addresses at these domains can automatically join this workspace.
-                    </CardDescription>
+                    <div className="flex items-start gap-3">
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <CardTitle>Allowed Email Domains</CardTitle>
+                          <span className="inline-flex items-center text-sm font-semibold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full shadow-sm">
+                            Powered by Scalekit
+                          </span>
+                        </div>
+                        <CardDescription>
+                          Anyone with email addresses at these domains can automatically join this organization.
+                        </CardDescription>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Add Domain Input */}
@@ -1033,71 +1027,72 @@ export default function Workspace() {
                     )}
                   </CardContent>
                 </Card>
-              </TabsContent>
+              </div>
+              )}
 
-              <TabsContent value="advanced" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Advanced Settings</CardTitle>
-                    <CardDescription>Configure advanced workspace settings including SSO and SCIM</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {portalLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                        <span className="ml-2">Loading configuration...</span>
-                      </div>
-                    ) : portalError ? (
-                      <div className="text-center py-8">
-                        <p className="text-destructive">{portalError}</p>
-                        {retryCount < MAX_RETRIES ? (
-                          <>
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mt-4"></div>
-                            <p className="text-sm text-muted-foreground mt-2">
-                              Retrying... ({retryCount + 1}/{MAX_RETRIES})
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-sm text-muted-foreground mt-2">
-                              Failed to load after {MAX_RETRIES} attempts
-                            </p>
-                            <Button 
-                              onClick={() => {
-                                setRetryCount(0);
-                                setPortalError(null);
-                                setHasFetchedPortal(false);
-                                fetchPortalLink();
-                              }} 
-                              className="mt-2"
-                            >
-                              Try Again
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    ) : portalUrl ? (
-                      <div className="w-full">
-                        <iframe
-                          src={portalUrl}
-                          className="w-full h-[600px] border rounded-lg"
-                          title="Advanced Configuration"
-                          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                        />
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">
-                          No portal URL available.
-                        </p>
+              {getActiveSection() === 'advanced' && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-2xl font-semibold">Enterprise Auth</h2>
+                  <span className="inline-flex items-center text-sm font-semibold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full shadow-sm">
+                    Powered by Scalekit
+                  </span>
+                </div>
+                {portalLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <span className="ml-2">Loading configuration...</span>
+                  </div>
+                ) : portalError ? (
+                  <div className="text-center py-8">
+                    <p className="text-destructive">{portalError}</p>
+                    {retryCount < MAX_RETRIES ? (
+                      <>
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mt-4"></div>
-                        <p className="text-sm text-muted-foreground mt-2">Loading configuration...</p>
-                      </div>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Retrying... ({retryCount + 1}/{MAX_RETRIES})
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Failed to load after {MAX_RETRIES} attempts
+                        </p>
+                        <Button 
+                          onClick={() => {
+                            setRetryCount(0);
+                            setPortalError(null);
+                            setHasFetchedPortal(false);
+                            fetchPortalLink();
+                          }} 
+                          className="mt-2"
+                        >
+                          Try Again
+                        </Button>
+                      </>
                     )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                  </div>
+                ) : portalUrl ? (
+                  <div className="w-full">
+                    <iframe
+                      src={portalUrl}
+                      className="w-full h-[600px] border rounded-lg"
+                      title="Advanced Configuration"
+                      sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">
+                      No portal URL available.
+                    </p>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mt-4"></div>
+                    <p className="text-sm text-muted-foreground mt-2">Loading configuration...</p>
+                  </div>
+                )}
+              </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

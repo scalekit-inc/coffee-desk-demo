@@ -73,7 +73,7 @@ export function CreateWorkspaceModal({
       });
 
       if (!response.ok) {
-        throw new Error(`Workspace creation failed: ${response.status}`);
+        throw new Error(`Organization creation failed: ${response.status}`);
       }
 
       const result: CreateWorkspaceResponse = await response.json();
@@ -86,7 +86,7 @@ export function CreateWorkspaceModal({
       window.location.href = `${config.backendUrl}/api/authorize?organization_id=${result.workspace.id}&prompt=select_account`;
       
     } catch (error) {
-      console.error("Workspace creation error:", error);
+      console.error("Organization creation error:", error);
       // You can add toast notification here for error handling
     } finally {
       setIsLoading(false);
@@ -97,9 +97,9 @@ export function CreateWorkspaceModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Workspace</DialogTitle>
+          <DialogTitle>Create New Organization</DialogTitle>
           <DialogDescription>
-            Enter a name for your new workspace. You can always change this later.
+            Enter a name for your new organization. You can always change this later.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -107,10 +107,10 @@ export function CreateWorkspaceModal({
             <FormField
               control={form.control}
               name="workspaceName"
-              rules={{ required: "Workspace name is required" }}
+              rules={{ required: "Organization name is required" }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Workspace name</FormLabel>
+                  <FormLabel>Organization name</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="e.g. Acme Corp"
@@ -132,7 +132,7 @@ export function CreateWorkspaceModal({
                 Cancel
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Creating..." : "Create Workspace"}
+                {isLoading ? "Creating..." : "Create Organization"}
               </Button>
             </DialogFooter>
           </form>

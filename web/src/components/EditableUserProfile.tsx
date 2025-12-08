@@ -19,7 +19,6 @@ interface EditableUserProfileProps {
 export function EditableUserProfile({ user, onUserUpdate }: EditableUserProfileProps) {
   const [firstName, setFirstName] = useState(user.first_name || "");
   const [lastName, setLastName] = useState(user.last_name || "");
-  const [name, setName] = useState(user.name || "");
   const [isSaving, setIsSaving] = useState(false);
   const { refetchSession } = useAuth();
 
@@ -27,14 +26,12 @@ export function EditableUserProfile({ user, onUserUpdate }: EditableUserProfileP
   useEffect(() => {
     setFirstName(user.first_name || "");
     setLastName(user.last_name || "");
-    setName(user.name || "");
   }, [user]);
 
   // Check if any field has been modified
   const hasChanges = 
     firstName !== (user.first_name || "") ||
-    lastName !== (user.last_name || "") ||
-    name !== (user.name || "");
+    lastName !== (user.last_name || "");
 
   const handleSave = async () => {
     if (!hasChanges) return;
@@ -51,7 +48,6 @@ export function EditableUserProfile({ user, onUserUpdate }: EditableUserProfileP
         body: JSON.stringify({
           firstName: firstName.trim(),
           lastName: lastName.trim(),
-          name: name.trim(),
         }),
       });
 
@@ -72,7 +68,6 @@ export function EditableUserProfile({ user, onUserUpdate }: EditableUserProfileP
     // Reset to original values
     setFirstName(user.first_name || "");
     setLastName(user.last_name || "");
-    setName(user.name || "");
   };
 
   return (
@@ -109,18 +104,6 @@ export function EditableUserProfile({ user, onUserUpdate }: EditableUserProfileP
               value={user.email}
               className="w-full px-3 py-2 border rounded-md bg-muted"
               readOnly
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Full Name</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter full name"
-              disabled={isSaving}
             />
           </div>
         </div>

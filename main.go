@@ -45,6 +45,14 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	// Enforce HTTPS
+	r.Use(func(c *gin.Context) {
+		if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
+			c.Writer.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+		c.Next()
+	})
+
 	// Set up HTML renderer with templates
 	r.SetHTMLTemplate(templates.Templates)
 
@@ -68,15 +76,16 @@ func main() {
 		panic(err)
 	}
 
-	// Serve favicon.ico
+	// Serve favicon.ico (using SVG format - modern browsers support it)
 	r.GET("/favicon.ico", func(c *gin.Context) {
-		file, err := rootFiles.Open("favicon.ico")
+		// Serve the coffee desk favicon SVG from uploads
+		file, err := uploads.Open("coffee-desk-favicon.svg")
 		if err != nil {
 			c.Status(404)
 			return
 		}
 		defer file.Close()
-		c.DataFromReader(200, -1, "image/x-icon", file, nil)
+		c.DataFromReader(200, -1, "image/svg+xml", file, nil)
 	})
 
 	// Serve robots.txt
@@ -111,6 +120,8 @@ func main() {
 		api.DELETE("/workspace/domains/:domain_id", handlers.DeleteDomainHandler)
 		api.PUT("/user/profile", handlers.UpdateUserProfileHandler)
 		api.GET("/portal/link", handlers.GetPortalLinkHandler)
+		api.GET("/scalekit/environment-url", handlers.GetScaleKitEnvironmentURLHandler)
+		api.GET("/scalekit/passkeys", handlers.RedirectToPasskeysHandler)
 		api.POST("/workspace/onboarding", handlers.OnboardingHandler)
 
 		// Project Management API routes
