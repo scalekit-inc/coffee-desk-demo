@@ -63,11 +63,7 @@ const Onboarding = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-<<<<<<< Updated upstream
           <CardTitle className="text-2xl">Welcome to Coffee Desk 👋</CardTitle>
-=======
-          <CardTitle className="text-2xl">Welcome to Coffeedesk 👋</CardTitle>
->>>>>>> Stashed changes
           <CardDescription>
             What should we call you—and your organization?
           </CardDescription>

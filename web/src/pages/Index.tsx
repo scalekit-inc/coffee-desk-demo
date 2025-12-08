@@ -39,11 +39,7 @@ const handleAuth = (type: 'signin' | 'signup') => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <img 
-<<<<<<< Updated upstream
                 src="/uploads/coffee-desk-name-icon.png" 
-=======
-                src="/uploads/name_icon.png" 
->>>>>>> Stashed changes
                 alt="Coffeedesk Logo" 
                 className="h-8 w-auto"
               />
@@ -168,11 +164,7 @@ const handleAuth = (type: 'signin' | 'signup') => {
             Ready to Transform Your Business?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-<<<<<<< Updated upstream
             Join thousands of companies already using Coffee desk to streamline operations and drive growth.
-=======
-            Join thousands of companies already using Coffeedesk to streamline operations and drive growth.
->>>>>>> Stashed changes
           </p>
           <Button size="lg" variant="secondary" className="text-lg px-8 py-6">
             Start Your Free Trial Today
@@ -187,11 +179,7 @@ const handleAuth = (type: 'signin' | 'signup') => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <img 
-<<<<<<< Updated upstream
                 src="/uploads/coffee-desk-name-icon.png" 
-=======
-                src="/uploads/name_icon.png" 
->>>>>>> Stashed changes
                 alt="Coffeedesk Logo" 
                 className="h-8 w-auto mb-4"
               />
@@ -227,11 +215,7 @@ const handleAuth = (type: 'signin' | 'signup') => {
             </div>
           </div>
           <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground">
-<<<<<<< Updated upstream
             <p>&copy; 2024 Coffee Desk. All rights reserved.</p>
-=======
-            <p>&copy; 2024 Coffeedesk. All rights reserved.</p>
->>>>>>> Stashed changes
           </div>
         </div>
       </footer>
