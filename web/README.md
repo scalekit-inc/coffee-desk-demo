@@ -4,11 +4,11 @@ This directory contains the React frontend for Coffee Desk Demo. For complete se
 
 The frontend is built with React, TypeScript, Vite, and Tailwind CSS. It communicates with the Go backend through RESTful API endpoints and uses Scalekit for authentication.
 
-# Architecture
+## Architecture
 
 The frontend uses a modern React architecture with TypeScript for type safety.
 
-## Technology stack
+### Technology stack
 
 - **React 18**: Component-based UI library
 - **TypeScript**: Type-safe JavaScript
@@ -18,7 +18,7 @@ The frontend uses a modern React architecture with TypeScript for type safety.
 - **React Router**: Client-side routing
 - **Axios**: HTTP client for API requests
 
-## Project structure
+### Project structure
 
 The frontend code is organized in the `src/` directory:
 
@@ -50,7 +50,7 @@ web/src/
 
 Develop the frontend using the Vite development server for hot module replacement.
 
-## Prerequisites
+### Prerequisites
 
 Before developing the frontend, ensure you have:
 
@@ -58,7 +58,7 @@ Before developing the frontend, ensure you have:
 - npm or yarn package manager
 - Backend server running (see main README for setup)
 
-## Running the development server
+### Running the development server
 
 Start the frontend development server:
 
@@ -70,7 +70,7 @@ npm run dev
 
 The development server runs on `http://localhost:5173` by default (Vite's default port). The server supports hot module replacement, so changes to your code are reflected immediately in the browser.
 
-## Running with backend
+### Running with backend
 
 For full-stack development, run both frontend and backend:
 
@@ -84,7 +84,7 @@ make dev-backend
 
 The frontend development server proxies API requests to the backend running on port 8080. Configure the proxy in `vite.config.ts` if you need to change ports.
 
-## Building for production
+### Building for production
 
 Build the frontend for production:
 
@@ -97,11 +97,11 @@ This creates an optimized production build in the `dist/` directory. The build i
 
 The main README explains how to build the complete application with embedded frontend assets.
 
-# Component Patterns
+## Component patterns
 
 Follow these patterns when adding new components.
 
-## Page components
+### Page components
 
 Page components represent full pages and are defined in `src/pages/`. Each page:
 
@@ -128,7 +128,7 @@ export default function MyPage() {
 }
 ```
 
-## Reusable components
+### Reusable components
 
 Reusable components live in `src/components/` and can be used across multiple pages. Components should:
 
@@ -137,7 +137,7 @@ Reusable components live in `src/components/` and can be used across multiple pa
 - Use shadcn/ui components for consistent styling
 - Follow Tailwind CSS patterns
 
-## API client functions
+### API client functions
 
 API client functions in `src/api/` handle communication with the backend:
 
@@ -162,7 +162,7 @@ export async function getProjects() {
 
 The frontend uses Tailwind CSS for styling with shadcn/ui components.
 
-## Tailwind CSS
+### Tailwind CSS
 
 Tailwind CSS provides utility classes for styling. Use Tailwind classes directly in your JSX:
 
@@ -174,7 +174,7 @@ Tailwind CSS provides utility classes for styling. Use Tailwind classes directly
 
 Customize Tailwind in `tailwind.config.ts`. The configuration extends the default theme with project-specific colors and spacing.
 
-## shadcn/ui components
+### shadcn/ui components
 
 Use shadcn/ui components from `src/components/ui/` for consistent, accessible UI elements:
 
@@ -190,11 +190,11 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 ```
 
-# Integration with Backend
+## Integration with backend
 
 The frontend integrates with the Go backend through RESTful API endpoints.
 
-## API configuration
+### API configuration
 
 API configuration is set in `src/config.ts`. The config determines:
 
@@ -202,7 +202,7 @@ API configuration is set in `src/config.ts`. The config determines:
 - Authentication token handling
 - Request/response interceptors
 
-## Authentication
+### Authentication
 
 Authentication is handled through Scalekit. The `useAuth` hook provides:
 
@@ -213,7 +213,7 @@ Authentication is handled through Scalekit. The `useAuth` hook provides:
 
 All API requests automatically include authentication tokens through Axios interceptors.
 
-## Data flow
+### Data flow
 
 Data flows from backend to frontend:
 
@@ -224,11 +224,11 @@ Data flows from backend to frontend:
 5. Component updates state with response data
 6. UI re-renders with new data
 
-# Building and Deployment
+## Building and deployment
 
 The frontend is built and embedded into the Go binary for deployment.
 
-## Development build
+### Development build
 
 For development, use the Vite dev server which provides:
 
@@ -237,7 +237,7 @@ For development, use the Vite dev server which provides:
 - TypeScript type checking
 - ESLint integration
 
-## Production build
+### Production build
 
 For production, build the frontend:
 
@@ -255,7 +255,7 @@ The build process:
 
 The `scripts/build-frontend.js` script then embeds these files into the Go binary.
 
-## Standalone deployment
+### Standalone deployment
 
 While the frontend is typically embedded in the Go binary, you can deploy it separately:
 
@@ -265,11 +265,12 @@ While the frontend is typically embedded in the Go binary, you can deploy it sep
 
 For standalone deployment, update `src/config.ts` to point to your backend API URL.
 
-# Troubleshooting
+## Troubleshooting
 
 Common frontend development issues and solutions.
 
-## TypeScript errors
+<details>
+<summary><strong>TypeScript errors</strong></summary>
 
 **Problem**: TypeScript compilation errors.
 
@@ -280,7 +281,10 @@ Common frontend development issues and solutions.
 - Run `npm run build` to see all TypeScript errors
 - Verify type definitions are installed: `npm install --save-dev @types/react`
 
-## Styling not applied
+</details>
+
+<details>
+<summary><strong>Styling not applied</strong></summary>
 
 **Problem**: Tailwind CSS classes not working.
 
@@ -291,7 +295,10 @@ Common frontend development issues and solutions.
 - Restart the dev server after changing Tailwind config
 - Clear browser cache
 
-## API requests failing
+</details>
+
+<details>
+<summary><strong>API requests failing</strong></summary>
 
 **Problem**: Frontend cannot reach backend API.
 
@@ -303,7 +310,10 @@ Common frontend development issues and solutions.
 - Check browser console for network errors
 - Verify authentication tokens are being sent
 
-## Hot reload not working
+</details>
+
+<details>
+<summary><strong>Hot reload not working</strong></summary>
 
 **Problem**: Changes not reflected in browser.
 
@@ -313,5 +323,7 @@ Common frontend development issues and solutions.
 - Clear browser cache
 - Check for syntax errors in console
 - Verify file is being watched (check Vite output)
+
+</details>
 
 For more help, see the troubleshooting section in the [main README](../README.md) or [join the Scalekit community on Slack](https://join.slack.com/t/scalekit-community/shared_invite/zt-3gsxwr4hc-0tvhwT2b_qgVSIZQBQCWRw) to ask questions and get support.

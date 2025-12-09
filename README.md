@@ -502,7 +502,8 @@ Ensure your deployment platform provides:
 
 Common issues and solutions when running Coffee Desk Demo.
 
-### Database connection errors
+<details>
+<summary><strong>Database connection errors</strong></summary>
 
 **Problem**: Application fails to connect to PostgreSQL.
 
@@ -514,7 +515,10 @@ Common issues and solutions when running Coffee Desk Demo.
 - Verify network connectivity if using a remote database
 - Check PostgreSQL logs for connection attempts
 
-### Scalekit authentication errors
+</details>
+
+<details>
+<summary><strong>Scalekit authentication errors</strong></summary>
 
 **Problem**: Users cannot log in or authentication fails.
 
@@ -526,7 +530,10 @@ Common issues and solutions when running Coffee Desk Demo.
 - Check browser console for JavaScript errors during authentication flow
 - Verify CORS settings in Scalekit if accessing from a different domain
 
-### Frontend build errors
+</details>
+
+<details>
+<summary><strong>Frontend build errors</strong></summary>
 
 **Problem**: `make build` fails with frontend build errors.
 
@@ -538,7 +545,10 @@ Common issues and solutions when running Coffee Desk Demo.
 - Verify all dependencies are installed: `cd web && npm install`
 - Check `web/package.json` for version conflicts
 
-### Port already in use
+</details>
+
+<details>
+<summary><strong>Port already in use</strong></summary>
 
 **Problem**: Application cannot start because port 8080 is already in use.
 
@@ -548,7 +558,10 @@ Common issues and solutions when running Coffee Desk Demo.
 - Find and stop the process using port 8080: `lsof -i :8080` (macOS/Linux) or `netstat -ano | findstr :8080` (Windows)
 - Use a different port for development: `PORT=3000 make run`
 
-### Database migration errors
+</details>
+
+<details>
+<summary><strong>Database migration errors</strong></summary>
 
 **Problem**: Database schema changes are not applied.
 
@@ -560,7 +573,10 @@ Common issues and solutions when running Coffee Desk Demo.
 - Manually inspect database schema: `psql project_management -c "\d projects"`
 - For production, consider using explicit migration files instead of auto-migration
 
-### CORS errors in development
+</details>
+
+<details>
+<summary><strong>CORS errors in development</strong></summary>
 
 **Problem**: Frontend cannot make API requests due to CORS errors.
 
@@ -570,5 +586,7 @@ Common issues and solutions when running Coffee Desk Demo.
 - Check that the frontend dev server is running on a different port than the backend
 - Verify CORS settings in `main.go` allow your frontend origin
 - Use the embedded frontend build (`make build && make run`) instead of separate servers
+
+</details>
 
 For additional help, check the application logs, open an issue in the repository, or [join the Scalekit community on Slack](https://join.slack.com/t/scalekit-community/shared_invite/zt-3gsxwr4hc-0tvhwT2b_qgVSIZQBQCWRw) to ask questions and get support.
