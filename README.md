@@ -4,7 +4,7 @@ Full-featured demo app demonstrating Scalekit's auth stack including workspace c
 
 This application provides a complete project management system with a Go backend and React frontend, showcasing how to build production-ready B2B applications with Scalekit's authentication and authorization features.
 
-# Features
+## Features
 
 Coffee Desk Demo includes the following features:
 
@@ -20,7 +20,7 @@ Coffee Desk Demo includes the following features:
 
 - **Cloud-Ready Deployment**: Optimized for GCP Cloud Run deployment with Docker containerization. The application is designed to scale horizontally and handle production workloads.
 
-# Compatibility
+## Compatibility
 
 Coffee Desk Demo requires the following software and services:
 
@@ -35,11 +35,11 @@ Coffee Desk Demo requires the following software and services:
 
 The application has been tested on Linux, macOS, and Windows. For production deployments, Linux containers are recommended.
 
-# Installing
+## Installing
 
 Install Coffee Desk Demo by cloning the repository and setting up the required dependencies.
 
-## Clone the repository
+### Clone the repository
 
 Clone the repository to your local machine:
 
@@ -48,7 +48,7 @@ git clone <repository-url>
 cd coffee-desk-demo
 ```
 
-## Install dependencies
+### Install dependencies
 
 Install both backend and frontend dependencies:
 
@@ -66,7 +66,7 @@ You can also use the Makefile to install all dependencies:
 make install
 ```
 
-## Set up environment variables
+### Set up environment variables
 
 Create a `.env` file in the root directory with your configuration:
 
@@ -85,11 +85,11 @@ PORT=8080
 
 The `SCALEKIT_ENVIRONMENT_URL` is your Scalekit environment endpoint. The `SCALEKIT_CLIENT_ID` and `SCALEKIT_CLIENT_SECRET` are obtained from your Scalekit dashboard when you create an application.
 
-## Set up PostgreSQL database
+### Set up PostgreSQL database
 
 Set up a PostgreSQL database for local development or production use.
 
-### Local Development
+#### Local development
 
 For local development, you can either install PostgreSQL directly or use Docker:
 
@@ -116,7 +116,7 @@ docker run --name postgres-pm \
 
 The Docker approach is recommended for quick setup and easy cleanup.
 
-### Cloud SQL (Production)
+#### Cloud SQL (production)
 
 For production deployments on GCP Cloud Run:
 
@@ -127,7 +127,7 @@ For production deployments on GCP Cloud Run:
    ```
 3. Configure the connection string in Cloud Run environment variables
 
-## Build and run
+### Build and run
 
 Build the application using the Makefile:
 
@@ -153,11 +153,11 @@ make dev-backend
 
 This allows hot-reloading for frontend changes while the backend runs separately.
 
-# Tutorial
+## Tutorial
 
 This tutorial guides you through using Coffee Desk Demo to manage projects and tasks.
 
-## First time setup
+### First time setup
 
 After installing and running the application, you'll need to authenticate with Scalekit.
 
@@ -168,7 +168,7 @@ After installing and running the application, you'll need to authenticate with S
 
 Once authenticated, you'll see the dashboard with an overview of your workspace.
 
-## Create your first project
+### Create your first project
 
 Projects organize related tasks and provide a way to track work across your organization.
 
@@ -183,7 +183,7 @@ Projects organize related tasks and provide a way to track work across your orga
 
 The project appears in your projects list and is automatically associated with your organization.
 
-## Create and assign tasks
+### Create and assign tasks
 
 Tasks represent individual work items that can be assigned to projects and team members.
 
@@ -200,7 +200,7 @@ Tasks represent individual work items that can be assigned to projects and team 
 
 Tasks linked to projects appear in the project detail view. You can filter tasks by project, status, priority, or assignee.
 
-## Navigate the dashboard
+### Navigate the dashboard
 
 The dashboard provides an overview of your organization's activity.
 
@@ -210,7 +210,7 @@ The dashboard provides an overview of your organization's activity.
 
 The dashboard updates in real-time as you and your team make changes.
 
-## Manage workspaces
+### Manage workspaces
 
 Workspaces represent organizations in Scalekit. Each workspace has its own projects, tasks, and users.
 
@@ -221,15 +221,15 @@ Workspaces represent organizations in Scalekit. Each workspace has its own proje
 
 All data is automatically scoped to your current workspace, ensuring complete isolation between organizations.
 
-# More features
+## More features
 
 Coffee Desk Demo includes additional features for production use.
 
-## API endpoints
+### API endpoints
 
 The application provides RESTful API endpoints for programmatic access. All endpoints require authentication via Scalekit and are organization-scoped.
 
-### Projects
+#### Projects
 
 | Method | Endpoint            | Description                                   |
 | ------ | ------------------- | --------------------------------------------- |
@@ -239,7 +239,7 @@ The application provides RESTful API endpoints for programmatic access. All endp
 | PUT    | `/api/projects/:id` | Update an existing project                    |
 | DELETE | `/api/projects/:id` | Delete a project                              |
 
-### Tasks
+#### Tasks
 
 | Method | Endpoint         | Description                                                            |
 | ------ | ---------------- | ---------------------------------------------------------------------- |
@@ -251,11 +251,11 @@ The application provides RESTful API endpoints for programmatic access. All endp
 
 All API requests must include a valid Scalekit authentication token in the `Authorization` header. Responses are JSON-formatted.
 
-## Database schema
+### Database schema
 
 The application uses PostgreSQL with the following main tables. All tables include `created_at` and `updated_at` timestamps.
 
-### Projects table
+#### Projects table
 
 | Column            | Type             | Description                         |
 | ----------------- | ---------------- | ----------------------------------- |
@@ -267,7 +267,7 @@ The application uses PostgreSQL with the following main tables. All tables inclu
 | `status`          | Enum             | Backlog, Todo, InProgress, or Done  |
 | `owner_id`        | String           | Optional reference to Scalekit user |
 
-### Tasks table
+#### Tasks table
 
 | Column            | Type             | Description                         |
 | ----------------- | ---------------- | ----------------------------------- |
@@ -282,7 +282,7 @@ The application uses PostgreSQL with the following main tables. All tables inclu
 
 The database uses GORM for object-relational mapping and automatically handles migrations on application startup.
 
-## Project structure
+### Project structure
 
 The codebase is organized into clear directories for maintainability:
 
@@ -313,7 +313,7 @@ coffee-desk-demo/
 └── README.md            # This file
 ```
 
-## Architecture
+### Architecture
 
 Coffee Desk Demo uses a modern full-stack architecture:
 
@@ -329,11 +329,11 @@ Coffee Desk Demo uses a modern full-stack architecture:
 
 - **API Routes**: All API endpoints are under `/api/*`. Static assets (CSS, JS, images) are served from `/assets/*`.
 
-# Configuring
+## Configuring
 
 Configure Coffee Desk Demo using environment variables and Scalekit settings.
 
-## Environment variables
+### Environment variables
 
 Set the following environment variables in your `.env` file or deployment environment:
 
@@ -347,7 +347,7 @@ Set the following environment variables in your `.env` file or deployment enviro
 
 The `PORT` variable defaults to `8080` if not specified. For production deployments, set this to match your hosting provider's requirements.
 
-## Scalekit configuration
+### Scalekit configuration
 
 Configure Scalekit settings in your Scalekit dashboard:
 
@@ -363,11 +363,11 @@ The application automatically handles Scalekit authentication flows and session 
 
 Develop new features by following the established patterns in the codebase.
 
-## Adding new features
+### Adding new features
 
 Add features by extending the existing handlers and components.
 
-### Backend API
+#### Backend API
 
 1. Add new handlers in the `handlers/` directory following the existing pattern
 2. Update models in `database/models.go` if you need new database tables or fields
@@ -379,7 +379,7 @@ All handlers should:
 - Scope operations to the user's organization
 - Return appropriate HTTP status codes and JSON responses
 
-### Frontend
+#### Frontend
 
 1. Add new pages in `web/src/pages/` for major features
 2. Create reusable components in `web/src/components/` for shared UI elements
@@ -388,7 +388,7 @@ All handlers should:
 
 The frontend uses React Router for navigation and Axios for API calls.
 
-## Database migrations
+### Database migrations
 
 The application uses GORM auto-migration. When you add new fields to models:
 
@@ -398,18 +398,18 @@ The application uses GORM auto-migration. When you add new fields to models:
 
 GORM automatically creates tables and adds columns, but does not remove columns or modify existing data. Plan migrations carefully for production deployments.
 
-## Adding new dependencies
+### Adding new dependencies
 
 Add dependencies using the standard package managers.
 
-### React Dependencies
+#### React dependencies
 
 ```bash
 cd web
 npm install <package-name>
 ```
 
-### Go Dependencies
+#### Go dependencies
 
 ```bash
 go get <package-name>
@@ -418,7 +418,7 @@ go mod tidy
 
 Always run `go mod tidy` after adding Go dependencies to clean up the `go.mod` file.
 
-## Development workflow
+### Development workflow
 
 Use the separate development servers for faster iteration:
 
@@ -430,15 +430,15 @@ Use the separate development servers for faster iteration:
 
 For production builds, use `make build` to create a single binary with embedded frontend assets.
 
-# Deployment
+## Deployment
 
 Deploy Coffee Desk Demo to production using Docker and GCP Cloud Run.
 
-## GCP Cloud Run
+### GCP Cloud Run
 
 Deploy to Google Cloud Run for serverless container hosting.
 
-### Build and push Docker image
+#### Build and push Docker image
 
 Build the Docker image and push it to Google Container Registry:
 
@@ -452,7 +452,7 @@ docker push gcr.io/PROJECT_ID/project-management-app
 
 Replace `PROJECT_ID` with your Google Cloud project ID.
 
-### Deploy to Cloud Run
+#### Deploy to Cloud Run
 
 Deploy the container to Cloud Run:
 
@@ -467,7 +467,7 @@ gcloud run deploy project-management-app \
 
 Set all required environment variables in the deployment command or through the Cloud Run console.
 
-### Set up Cloud SQL connection
+#### Set up Cloud SQL connection
 
 Connect to Cloud SQL for database access:
 
@@ -482,7 +482,7 @@ Connect to Cloud SQL for database access:
 
 The application automatically connects to Cloud SQL using the Unix socket path specified in the connection string.
 
-## Other deployment options
+### Other deployment options
 
 Coffee Desk Demo can be deployed to any platform that supports Docker containers:
 
@@ -498,11 +498,11 @@ Ensure your deployment platform provides:
 - HTTPS support for Scalekit callbacks
 - Sufficient memory and CPU for the application
 
-# Troubleshooting
+## Troubleshooting
 
 Common issues and solutions when running Coffee Desk Demo.
 
-## Database connection errors
+### Database connection errors
 
 **Problem**: Application fails to connect to PostgreSQL.
 
@@ -514,7 +514,7 @@ Common issues and solutions when running Coffee Desk Demo.
 - Verify network connectivity if using a remote database
 - Check PostgreSQL logs for connection attempts
 
-## Scalekit authentication errors
+### Scalekit authentication errors
 
 **Problem**: Users cannot log in or authentication fails.
 
@@ -526,7 +526,7 @@ Common issues and solutions when running Coffee Desk Demo.
 - Check browser console for JavaScript errors during authentication flow
 - Verify CORS settings in Scalekit if accessing from a different domain
 
-## Frontend build errors
+### Frontend build errors
 
 **Problem**: `make build` fails with frontend build errors.
 
@@ -538,7 +538,7 @@ Common issues and solutions when running Coffee Desk Demo.
 - Verify all dependencies are installed: `cd web && npm install`
 - Check `web/package.json` for version conflicts
 
-## Port already in use
+### Port already in use
 
 **Problem**: Application cannot start because port 8080 is already in use.
 
@@ -548,7 +548,7 @@ Common issues and solutions when running Coffee Desk Demo.
 - Find and stop the process using port 8080: `lsof -i :8080` (macOS/Linux) or `netstat -ano | findstr :8080` (Windows)
 - Use a different port for development: `PORT=3000 make run`
 
-## Database migration errors
+### Database migration errors
 
 **Problem**: Database schema changes are not applied.
 
@@ -560,7 +560,7 @@ Common issues and solutions when running Coffee Desk Demo.
 - Manually inspect database schema: `psql project_management -c "\d projects"`
 - For production, consider using explicit migration files instead of auto-migration
 
-## CORS errors in development
+### CORS errors in development
 
 **Problem**: Frontend cannot make API requests due to CORS errors.
 
