@@ -11,7 +11,6 @@ import (
 	"coffee-desk-demo/database"
 
 	"github.com/gin-gonic/gin"
-	organizationsv1 "github.com/scalekit-inc/scalekit-sdk-go/v2/pkg/grpc/scalekit/v1/organizations"
 	usersv1 "github.com/scalekit-inc/scalekit-sdk-go/v2/pkg/grpc/scalekit/v1/users"
 )
 
@@ -77,15 +76,6 @@ func OnboardingHandler(c *gin.Context) {
 		return
 	}
 
-	// Generate the external ID in the format wspace_id_<org_id_suffix>
-	// If org_id is org_59615193906282635, external_id will be wspace_id_59615193906282635
-	externalID, err := toExternalWorkspaceID(organizationID)
-	if err != nil {
-		log.Printf("Invalid organization ID format: %s", organizationID)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid organization ID format"})
-		return
-	}
-
 	// Get the global ScaleKit client
 	scalekitClient, err := GetScaleKitClient()
 	if err != nil {
@@ -117,30 +107,30 @@ func OnboardingHandler(c *gin.Context) {
 
 	}
 
-	// Step 2: Update the organization
-	updateOrg := &organizationsv1.UpdateOrganization{
-		DisplayName: &requestBody.WorkspaceName,
-		ExternalId:  &externalID,
-	}
-
-	// Update the organization using the SDK
-	response, err := scalekitClient.Organization().UpdateOrganization(context.Background(), organizationID, updateOrg)
-	if err != nil {
-		log.Printf("Error updating organization: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update organization"})
-		return
-	}
-
-	// Create organization in local database
+	// Step 2: Create the organization in the local database
 	localOrg := database.Organization{
 		ExternalID: organizationID,
-		Name:       response.Organization.DisplayName,
+		Name:       requestBody.WorkspaceName,
 	}
 
 	if err := database.DB.Create(&localOrg).Error; err != nil {
 		log.Printf("Error creating organization in local database: %v", err)
-		// Don't fail the request, just log the error
-		// The organization was updated in Scalekit successfully
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create organization"})
+		return
+	}
+
+	// Step 3: Link the local organization to the ScaleKit user via metadata
+	orgIDStr := localOrg.ID.String()
+	metadataUpdate := &usersv1.UpdateUser{
+		Metadata: map[string]string{
+			"coffee_org_id": orgIDStr,
+		},
+	}
+
+	if _, err := scalekitClient.User().UpdateUser(context.Background(), userID, metadataUpdate); err != nil {
+		log.Printf("Error updating user metadata with coffee_org_id: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to link organization to user"})
+		return
 	}
 
 	// Create user in local database (we need to get user email from Scalekit)
@@ -181,9 +171,9 @@ func OnboardingHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Onboarding completed successfully",
 		"organization": gin.H{
-			"id":           response.Organization.Id,
-			"display_name": response.Organization.DisplayName,
-			"external_id":  response.Organization.ExternalId,
+			"id":           localOrg.ID.String(),
+			"display_name": localOrg.Name,
+			"external_id":  localOrg.ExternalID,
 		},
 		"user_updated": requestBody.FirstName != "" || requestBody.LastName != "",
 	})

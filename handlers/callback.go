@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	usersv1 "github.com/scalekit-inc/scalekit-sdk-go/v2/pkg/grpc/scalekit/v1/users"
 )
 
@@ -118,7 +119,7 @@ func CallbackHandler(c *gin.Context) {
 		uiURL = protocol + "://" + c.Request.Host
 	}
 
-	// Decode the access token to check for xoid
+	// Decode the access token to check for oid
 	token, _, err := jwt.NewParser().ParseUnverified(accessToken, jwt.MapClaims{})
 	if err != nil {
 		log.Printf("Error parsing access token: %v", err)
@@ -133,14 +134,77 @@ func CallbackHandler(c *gin.Context) {
 		return
 	}
 
-	// Check if xoid and xuid exist in the token
-	_, hasXoid := claims["xoid"]
+	// Check if oid and xuid exist in the token
+	_, hasOid := claims["oid"]
 	_, hasXuid := claims["xuid"]
 	redirectPath := "/onboarding"
-	if hasXoid {
-		redirectPath = "/dashboard"
+	if hasOid {
+		// Use the Scalekit user metadata to determine the linked organization
+		userID, ok := claims["sub"].(string)
+		if !ok || userID == "" {
+			log.Printf("No valid sub claim found in token, redirecting to onboarding")
+			redirectPath = "/onboarding"
+		} else {
+			// Get ScaleKit client
+			scalekitClient, err := GetScaleKitClient()
+			if err != nil {
+				log.Printf("Failed to get ScaleKit client: %v", err)
+				redirectPath = "/onboarding"
+			} else {
+				// Fetch the user to inspect metadata for tea/coffee org id
+				log.Printf("Fetching user from ScaleKit for user_id: %s", userID)
+				userResponse, err := scalekitClient.User().GetUser(context.Background(), userID)
+				if err != nil {
+					log.Printf("Error getting user from ScaleKit: %v", err)
+					redirectPath = "/onboarding"
+				} else {
+					log.Printf("Successfully fetched user %s from ScaleKit", userResponse.User.Id)
+					orgIDStr := ""
+					if userResponse.User.Metadata != nil {
+						log.Printf("User metadata available, checking for org link keys")
+						if coffeeOrgID, ok := userResponse.User.Metadata["coffee_org_id"]; ok && coffeeOrgID != "" {
+							orgIDStr = coffeeOrgID
+							log.Printf("Found coffee_org_id in user metadata: %s", orgIDStr)
+						} else if teaOrgID, ok := userResponse.User.Metadata["coffee_org_id"]; ok && teaOrgID != "" {
+							orgIDStr = teaOrgID
+							log.Printf("Found coffee_org_id in user metadata: %s", orgIDStr)
+						} else {
+							log.Printf("No coffee_org_id or coffee_org_id present in user metadata for user %s", userID)
+						}
+					} else {
+						log.Printf("User metadata is nil for user %s", userID)
+					}
 
-		// If xoid is present but xuid is not present, create user in local database
+					if orgIDStr == "" {
+						log.Printf("No linked organization ID found in user metadata for user %s, redirecting to onboarding", userID)
+						redirectPath = "/onboarding"
+					} else {
+						// Parse metadata org ID as UUID and check against local database
+						orgUUID, err := uuid.Parse(orgIDStr)
+						if err != nil {
+							log.Printf("Invalid organization ID format in user metadata (not a valid UUID): %s, redirecting to onboarding", orgIDStr)
+							redirectPath = "/onboarding"
+						} else {
+							log.Printf("Parsed organization ID from user metadata: %s, checking against local database", orgIDStr)
+							var org database.Organization
+							err := database.DB.Where("id = ?", orgUUID).First(&org).Error
+							if err == nil {
+								log.Printf("Organization %s found in local database via user metadata, redirecting to dashboard", orgIDStr)
+								redirectPath = "/dashboard"
+							} else {
+								log.Printf("Organization %s from user metadata not found in local database, redirecting to onboarding", orgIDStr)
+								redirectPath = "/onboarding"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if redirectPath == "/dashboard" {
+
+		// If oid is present but xuid is not present, create user in local database
 		// and update external_id in ScaleKit
 		if !hasXuid {
 			// Extract user ID (sub) from token claims
