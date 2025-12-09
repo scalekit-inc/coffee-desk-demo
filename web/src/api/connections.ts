@@ -9,21 +9,22 @@ export interface ConnectionStatus {
 }
 
 export interface ConfigureResponse {
-  success: boolean;
-  message?: string;
-  auth_url?: string;  // ← OAuth URL comes in JSON body
+  link?: string;      // ← Magic link from Scalekit
+  expiry?: string;    // ← Link expiry timestamp
+  success?: boolean;   // ← For disable operations
+  message?: string;   // ← For disable operations
   provider?: string;
 }
 
 export async function getSlackStatus(): Promise<ConnectionStatus> {
-  const response = await fetch('/api/connections/slack', {
+  const response = await fetch('/api/connections?connector=slack', {
     credentials: 'include',
   });
   return response.json();
 }
 
 export async function configureSlack(enabled: boolean): Promise<ConfigureResponse> {
-  const response = await fetch('/api/connections/slack', {
+  const response = await fetch('/api/connections?connector=slack', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -35,20 +36,20 @@ export async function configureSlack(enabled: boolean): Promise<ConfigureRespons
     throw new Error(error.error || 'Failed to configure Slack');
   }
   
-  // ✅ OAuth URL is in JSON body, not headers
+  // ✅ Magic link response from Scalekit: { link, expiry }
   const data = await response.json();
-  return data;  // Contains: { success, auth_url, provider }
+  return data;  // Contains: { link, expiry }
 }
 
 export async function getGithubStatus(): Promise<ConnectionStatus> {
-  const response = await fetch('/api/connections/github', {
+  const response = await fetch('/api/connections?connector=github-actions', {
     credentials: 'include',
   });
   return response.json();
 }
 
 export async function configureGithub(enabled: boolean): Promise<ConfigureResponse> {
-  const response = await fetch('/api/connections/github', {
+  const response = await fetch('/api/connections?connector=github-actions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -60,7 +61,7 @@ export async function configureGithub(enabled: boolean): Promise<ConfigureRespon
     throw new Error(error.error || 'Failed to configure GitHub');
   }
   
-  // ✅ OAuth URL is in JSON body
+  // ✅ Magic link response from Scalekit: { link, expiry }
   const data = await response.json();
-  return data;  // Contains: { success, auth_url, provider }
+  return data;  // Contains: { link, expiry }
 }

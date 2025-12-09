@@ -41,7 +41,7 @@ const App = () => (
         } 
       />
       <Route
-      path ="/dashboard/connections"
+      path ="/dashboard/integrations"
       element={
         <AuthWrapper requireAuth={true}>
           <Connections />

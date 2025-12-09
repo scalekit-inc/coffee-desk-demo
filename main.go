@@ -27,6 +27,12 @@ func main() {
 		panic(fmt.Sprintf("Failed to initialize connections handler: %v", err))
 	}
 
+	// Initialize connected accounts handler
+	connectedAccountsHandler, err := handlers.NewConnectedAccountsHandler()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to initialize connected accounts handler: %v", err))
+	}
+
 	// Initialize database
 	if err := database.InitDatabase(); err != nil {
 		panic(fmt.Sprintf("Failed to initialize database: %v", err))
@@ -134,6 +140,9 @@ func main() {
 		//
 		// Connections routes - registers /api/connections/* endpoints
 		connectionsHandler.RegisterRoutes(api)
+
+		// Connected accounts routes - registers GET /api/connections?connector=slack|github
+		connectedAccountsHandler.RegisterRoutes(api)
 
 		// Project Management API routes
 		api.GET("/projects", handlers.GetProjectsHandler)

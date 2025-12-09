@@ -76,23 +76,29 @@ export default function Connections() {
     
     try {
       if (enabled) {
-        // Enable Slack - redirect to OAuth
+        // Enable Slack - open magic link in new tab
         const result = await configureSlack(true);
         
-        if (result.auth_url) {
-          console.log('🚀 Redirecting to Slack OAuth:', result.auth_url);
+        if (result.link) {
+          console.log('🚀 Opening Slack OAuth in new tab:', result.link);
           
           // Store that we're doing Slack OAuth
           localStorage.setItem('oauth_pending', 'Slack');
           
-          // Redirect to OAuth URL
-          window.location.href = result.auth_url;
+          // Open magic link in new tab
+          window.open(result.link, '_blank', 'noopener,noreferrer');
           
-          // Don't clear loading - page will redirect
+          // Clear loading state since we're not redirecting
+          setLoadingSlack(false);
+          
+          toast({
+            title: "OAuth Link Opened",
+            description: "Please complete the authorization in the new tab",
+          });
           return;
         } else {
-          // No auth URL (shouldn't happen for enable)
-          console.warn('No auth URL returned from backend');
+          // No link (shouldn't happen for enable)
+          console.warn('No link returned from backend');
           setSlackEnabled(true);
           toast({
             title: "Success",
@@ -134,23 +140,29 @@ export default function Connections() {
     
     try {
       if (enabled) {
-        // Enable GitHub - redirect to OAuth
+        // Enable GitHub - open magic link in new tab
         const result = await configureGithub(true);
         
-        if (result.auth_url) {
-          console.log('🚀 Redirecting to GitHub OAuth:', result.auth_url);
+        if (result.link) {
+          console.log('🚀 Opening GitHub OAuth in new tab:', result.link);
           
           // Store that we're doing GitHub OAuth
           localStorage.setItem('oauth_pending', 'GitHub');
           
-          // Redirect to OAuth URL
-          window.location.href = result.auth_url;
+          // Open magic link in new tab
+          window.open(result.link, '_blank', 'noopener,noreferrer');
           
-          // Don't clear loading - page will redirect
+          // Clear loading state since we're not redirecting
+          setLoadingGithub(false);
+          
+          toast({
+            title: "OAuth Link Opened",
+            description: "Please complete the authorization in the new tab",
+          });
           return;
         } else {
-          // No auth URL (shouldn't happen for enable)
-          console.warn('No auth URL returned from backend');
+          // No link (shouldn't happen for enable)
+          console.warn('No link returned from backend');
           setGithubEnabled(true);
           toast({
             title: "Success",
@@ -215,7 +227,7 @@ export default function Connections() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Loading connections...</p>
+          <p className="text-muted-foreground">Loading integrations...</p>
         </div>
       </div>
     );
@@ -307,7 +319,7 @@ export default function Connections() {
               {/* Slack Integration Card */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                  <div>
+                  <div className="space-y-1">
                     <CardTitle className="flex items-center gap-2">
                       Slack
                       {slackEnabled && <CheckCircle2 className="h-5 w-5 text-green-500" />}
@@ -346,7 +358,7 @@ export default function Connections() {
               {/* GitHub Integration Card */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                  <div>
+                  <div className="space-y-1">
                     <CardTitle className="flex items-center gap-2">
                       GitHub
                       {githubEnabled && <CheckCircle2 className="h-5 w-5 text-green-500" />}

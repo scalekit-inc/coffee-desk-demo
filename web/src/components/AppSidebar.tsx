@@ -2,13 +2,11 @@ import { LayoutDashboard, Users, Settings, FolderOpen, CheckSquare, Building2, S
 import { NavLink, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { hasPermission } from "./RBACGuard";
-import { title } from "process";
 
 const navigationItems = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
   { title: "Projects", url: "/dashboard/projects", icon: FolderOpen },
   { title: "Tasks", url: "/dashboard/tasks", icon: CheckSquare },
-  { title: "Connections", url: "/dashboard/connections", icon: Settings },
 ];
 
 const organizationSettingsItems = [
@@ -23,9 +21,6 @@ export function AppSidebar() {
   
   // RBAC: Only show workspace section for users with organization:settings permission
   const canAccessWorkspace = hasPermission(user?.permissions, "organization:settings");
-
-  //RBAC: Add Connections to external applications for users with workspace:admin or workspace:connections permission
-  const canAccessConnections = hasPermission(user?.permissions, "workspace:admin") || hasPermission(user?.permissions, "workspace:connections"); 
 
   const location = useLocation();
   const currentPath = location.pathname;
@@ -114,6 +109,13 @@ export function AppSidebar() {
           >
             <Users className="h-4 w-4" />
             <span>User Profile</span>
+          </NavLink>
+          <NavLink 
+            to="/dashboard/integrations" 
+            className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses("/dashboard/integrations")}`}
+          >
+            <Settings className="h-4 w-4" />
+            <span>Integrations</span>
           </NavLink>
         </nav>
       </div>
