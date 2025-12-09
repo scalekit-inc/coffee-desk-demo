@@ -8,6 +8,13 @@ export interface ConnectionStatus {
   message?: string;
 }
 
+export interface ConfigureResponse {
+  success: boolean;
+  message?: string;
+  auth_url?: string;  // ← OAuth URL comes in JSON body
+  provider?: string;
+}
+
 export async function getSlackStatus(): Promise<ConnectionStatus> {
   const response = await fetch('/api/connections/slack', {
     credentials: 'include',
@@ -15,7 +22,7 @@ export async function getSlackStatus(): Promise<ConnectionStatus> {
   return response.json();
 }
 
-export async function configureSlack(enabled: boolean): Promise<{ authUrl?: string }> {
+export async function configureSlack(enabled: boolean): Promise<ConfigureResponse> {
   const response = await fetch('/api/connections/slack', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -28,11 +35,9 @@ export async function configureSlack(enabled: boolean): Promise<{ authUrl?: stri
     throw new Error(error.error || 'Failed to configure Slack');
   }
   
-  // Get authorization URL from header if enabling
-  const authUrl = response.headers.get('X-Authorization-URL');
+  // ✅ OAuth URL is in JSON body, not headers
   const data = await response.json();
-  
-  return { ...data, authUrl };
+  return data;  // Contains: { success, auth_url, provider }
 }
 
 export async function getGithubStatus(): Promise<ConnectionStatus> {
@@ -42,7 +47,7 @@ export async function getGithubStatus(): Promise<ConnectionStatus> {
   return response.json();
 }
 
-export async function configureGithub(enabled: boolean): Promise<{ authUrl?: string }> {
+export async function configureGithub(enabled: boolean): Promise<ConfigureResponse> {
   const response = await fetch('/api/connections/github', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -55,8 +60,7 @@ export async function configureGithub(enabled: boolean): Promise<{ authUrl?: str
     throw new Error(error.error || 'Failed to configure GitHub');
   }
   
-  const authUrl = response.headers.get('X-Authorization-URL');
+  // ✅ OAuth URL is in JSON body
   const data = await response.json();
-  
-  return { ...data, authUrl };
+  return data;  // Contains: { success, auth_url, provider }
 }

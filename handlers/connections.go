@@ -182,6 +182,9 @@ func (h *ConnectionsHandler) getOrganizationID(c *gin.Context) (string, error) {
 func (h *ConnectionsHandler) RegisterRoutes(r *gin.RouterGroup) {
 	connections := r.Group("/connections")
 	{
+		//For MCP server to lookup connection_id
+		connections.GET("/:provider", h.GetConnectionByProvider)
+
 		// Slack routes
 		connections.GET("/slack", h.GetSlackStatus)
 		connections.POST("/slack", h.ConfigureSlack)
@@ -220,6 +223,52 @@ func (h *ConnectionsHandler) getConnectionStatus(ctx context.Context, orgID, pro
 	}
 
 	return nil, nil // No connection found
+}
+
+// This is called by the MCP server to get connection_id before executing tools
+// GetConnectionByProvider returns connected_account_id for MCP tool execution
+func (h *ConnectionsHandler) GetConnectionByProvider(c *gin.Context) {
+	orgID, err := h.getOrganizationID(c)
+	if err != nil {
+		log.Printf("❌ Failed to get organization ID: %v", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	provider := c.Param("provider")
+	if provider == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Provider parameter required"})
+		return
+	}
+
+	log.Printf("🔍 MCP Server requesting %s connection for org %s", provider, orgID)
+
+	connection, err := h.getConnectionStatus(c.Request.Context(), orgID, provider)
+	if err != nil {
+		log.Printf("❌ Failed to fetch connection: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch connection status",
+		})
+		return
+	}
+
+	if connection == nil || connection.Status != "connected" {
+		log.Printf("⚠️  %s not connected for org %s", provider, orgID)
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   "Connection not found",
+			"message": fmt.Sprintf("%s is not connected. Please connect it in CoffeeDesk.", provider),
+		})
+		return
+	}
+
+	//Return connection.ID which is the connected_account_id
+	log.Printf("✅ Found %s connected account: %s", provider, connection.ID)
+	c.JSON(http.StatusOK, gin.H{
+		"connected_account_id": connection.ID, // ← Changed from connection_id
+		"provider":             connection.Provider,
+		"status":               connection.Status,
+		"organization_id":      orgID,
+	})
 }
 
 // GetSlackStatus retrieves the current Slack connection status
@@ -263,7 +312,7 @@ func (h *ConnectionsHandler) GetSlackStatus(c *gin.Context) {
 func (h *ConnectionsHandler) ConfigureSlack(c *gin.Context) {
 	orgID, err := h.getOrganizationID(c)
 	if err != nil {
-		log.Printf("Failed to get organization ID: %v", err)
+		log.Printf("❌ Failed to get organization ID: %v", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
@@ -275,7 +324,7 @@ func (h *ConnectionsHandler) ConfigureSlack(c *gin.Context) {
 	}
 
 	if req.Enabled {
-		// Get base URL for callback
+		//Generate OAuth URL for Agent Actions
 		scheme := "http"
 		if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
 			scheme = "https"
@@ -286,53 +335,38 @@ func (h *ConnectionsHandler) ConfigureSlack(c *gin.Context) {
 			baseURL = fmt.Sprintf("%s://%s", scheme, c.Request.Host)
 		}
 
-		callbackURL := fmt.Sprintf("%s/api/connections/slack/callback", baseURL)
+		redirectURI := fmt.Sprintf("%s/api/connections/slack/callback", baseURL)
 
-		// Create authorization URL
-		authReqBody := CreateAuthorizationURLRequest{
-			RedirectURI: callbackURL,
-		}
-
-		respBody, err := h.makeAPIRequest(
-			c.Request.Context(),
-			"POST",
-			fmt.Sprintf("/api/v1/agent/organizations/%s/connections/slack/authorize", orgID),
-			authReqBody,
+		// This is for Scalekit's Agent Actions OAuth
+		// The SDK should handle this, but if not available, build URL manually
+		authURL := fmt.Sprintf(
+			"%s/oauth/authorize?provider=slack&client_id=%s&redirect_uri=%s&organization_id=%s&response_type=code&state=%s",
+			h.envURL,
+			h.clientID,
+			url.QueryEscape(redirectURI),
+			orgID,
+			"slack_connect", // state to identify this flow
 		)
-		if err != nil {
-			log.Printf("Failed to create authorization URL: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to create authorization URL: %v", err)})
-			return
-		}
 
-		var authResp CreateAuthorizationURLResponse
-		if err := json.Unmarshal(respBody, &authResp); err != nil {
-			log.Printf("Failed to parse authorization response: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse response"})
-			return
-		}
+		log.Printf("✅ Generated Slack OAuth URL: %s", authURL)
 
-		response := ConnectionResponse{
-			Success: true,
-			Message: "Please complete OAuth authorization",
-			Connection: &ConnectionDetails{
-				Provider: "slack",
-				Enabled:  false,
-			},
-		}
-
-		c.Header("X-Authorization-URL", authResp.URL)
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, gin.H{
+			"success":  true,
+			"message":  "Please complete OAuth authorization",
+			"auth_url": authURL,
+			"provider": "slack",
+		})
 	} else {
-		// Disable connection - find and delete it
+		// Disable: Delete the connected account
 		slackConn, err := h.getConnectionStatus(c.Request.Context(), orgID, "slack")
 		if err != nil {
-			log.Printf("Failed to fetch connections: %v", err)
+			log.Printf("❌ Failed to fetch connections: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch connections"})
 			return
 		}
 
-		if slackConn != nil {
+		if slackConn != nil && slackConn.ID != "" {
+			// Use the connection ID to delete
 			_, err := h.makeAPIRequest(
 				c.Request.Context(),
 				"DELETE",
@@ -340,22 +374,16 @@ func (h *ConnectionsHandler) ConfigureSlack(c *gin.Context) {
 				nil,
 			)
 			if err != nil {
-				log.Printf("Failed to delete connection: %v", err)
+				log.Printf("❌ Failed to delete connection: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete connection"})
 				return
 			}
 		}
 
-		response := ConnectionResponse{
-			Success: true,
-			Message: "Slack connection disabled successfully",
-			Connection: &ConnectionDetails{
-				Provider: "slack",
-				Enabled:  false,
-			},
-		}
-
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Slack connection disabled",
+		})
 	}
 }
 
@@ -400,7 +428,7 @@ func (h *ConnectionsHandler) GetGithubStatus(c *gin.Context) {
 func (h *ConnectionsHandler) ConfigureGithub(c *gin.Context) {
 	orgID, err := h.getOrganizationID(c)
 	if err != nil {
-		log.Printf("Failed to get organization ID: %v", err)
+		log.Printf("❌ Failed to get organization ID: %v", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
@@ -422,51 +450,35 @@ func (h *ConnectionsHandler) ConfigureGithub(c *gin.Context) {
 			baseURL = fmt.Sprintf("%s://%s", scheme, c.Request.Host)
 		}
 
-		callbackURL := fmt.Sprintf("%s/api/connections/github/callback", baseURL)
+		redirectURI := fmt.Sprintf("%s/api/connections/github/callback", baseURL)
 
-		authReqBody := CreateAuthorizationURLRequest{
-			RedirectURI: callbackURL,
-		}
-
-		respBody, err := h.makeAPIRequest(
-			c.Request.Context(),
-			"POST",
-			fmt.Sprintf("/api/v1/agent/organizations/%s/connections/github/authorize", orgID),
-			authReqBody,
+		//GitHub OAuth URL
+		authURL := fmt.Sprintf(
+			"%s/oauth/authorize?provider=github&client_id=%s&redirect_uri=%s&organization_id=%s&response_type=code&state=%s",
+			h.envURL,
+			h.clientID,
+			url.QueryEscape(redirectURI),
+			orgID,
+			"github_connect",
 		)
-		if err != nil {
-			log.Printf("Failed to create authorization URL: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to create authorization URL: %v", err)})
-			return
-		}
 
-		var authResp CreateAuthorizationURLResponse
-		if err := json.Unmarshal(respBody, &authResp); err != nil {
-			log.Printf("Failed to parse authorization response: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse response"})
-			return
-		}
+		log.Printf("✅ Generated GitHub OAuth URL: %s", authURL)
 
-		response := ConnectionResponse{
-			Success: true,
-			Message: "Please complete OAuth authorization",
-			Connection: &ConnectionDetails{
-				Provider: "github",
-				Enabled:  false,
-			},
-		}
-
-		c.Header("X-Authorization-URL", authResp.URL)
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, gin.H{
+			"success":  true,
+			"message":  "Please complete OAuth authorization",
+			"auth_url": authURL,
+			"provider": "github",
+		})
 	} else {
 		githubConn, err := h.getConnectionStatus(c.Request.Context(), orgID, "github")
 		if err != nil {
-			log.Printf("Failed to fetch connections: %v", err)
+			log.Printf("❌ Failed to fetch connections: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch connections"})
 			return
 		}
 
-		if githubConn != nil {
+		if githubConn != nil && githubConn.ID != "" {
 			_, err := h.makeAPIRequest(
 				c.Request.Context(),
 				"DELETE",
@@ -474,22 +486,16 @@ func (h *ConnectionsHandler) ConfigureGithub(c *gin.Context) {
 				nil,
 			)
 			if err != nil {
-				log.Printf("Failed to delete connection: %v", err)
+				log.Printf("❌ Failed to delete connection: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete connection"})
 				return
 			}
 		}
 
-		response := ConnectionResponse{
-			Success: true,
-			Message: "GitHub connection disabled successfully",
-			Connection: &ConnectionDetails{
-				Provider: "github",
-				Enabled:  false,
-			},
-		}
-
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "GitHub connection disabled",
+		})
 	}
 }
 

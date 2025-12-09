@@ -43,7 +43,7 @@ func main() {
 
 	// Configure CORS (can be reduced since we're serving from same origin)
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*", "https://roxane-pilonidal-mildred.ngrok-free.dev/"}, // Allow all origins in production
+		AllowOrigins:     []string{"*"}, // Allow all origins in production
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},

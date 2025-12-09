@@ -71,80 +71,25 @@ func ScalekitWebhookHandler(c *gin.Context) {
 		return
 	}
 
-	// Step 2: Verify webhook signature
+	// Step 2: Get webhook secret
 	webhookSecret := os.Getenv("SCALEKIT_WEBHOOK_SECRET")
-	if webhookSecret == "" {
-		log.Printf("⚠️  Warning: SCALEKIT_WEBHOOK_SECRET not set, skipping verification")
-	}
 
+	// Step 3: Verify webhook signature (if secret is configured)
 	if webhookSecret != "" {
+		log.Printf("🔐 Verifying webhook signature...")
+
+		// Extract Svix headers
 		headers := http.Header{}
 		headers.Set("svix-id", c.GetHeader("svix-id"))
 		headers.Set("svix-timestamp", c.GetHeader("svix-timestamp"))
 		headers.Set("svix-signature", c.GetHeader("svix-signature"))
 
-		log.Printf("📨 Webhook request headers:")
-		for name, values := range c.Request.Header {
-			for _, value := range values {
-				log.Printf("  %s: %s", name, value)
-			}
-		}
+		log.Printf("🔍 Svix headers:")
+		log.Printf("  svix-id: %s", c.GetHeader("svix-id"))
+		log.Printf("  svix-timestamp: %s", c.GetHeader("svix-timestamp"))
+		log.Printf("  svix-signature: %s", c.GetHeader("svix-signature"))
 
-		// Read request body
-		body, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			log.Printf("❌ Error reading webhook body: %v", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Error reading request body"})
-			return
-		}
-
-		// Get webhook secret
-		webhookSecret := os.Getenv("SCALEKIT_WEBHOOK_SECRET")
-		if webhookSecret == "" {
-			log.Printf("⚠️  Warning: SCALEKIT_WEBHOOK_SECRET not set, skipping verification")
-		}
-
-		if webhookSecret != "" {
-			// ⭐ Log what we're trying to extract
-			log.Printf("🔍 Looking for Svix headers:")
-			log.Printf("  svix-id: %s", c.GetHeader("svix-id"))
-			log.Printf("  svix-timestamp: %s", c.GetHeader("svix-timestamp"))
-			log.Printf("  svix-signature: %s", c.GetHeader("svix-signature"))
-
-			headers := http.Header{}
-			headers.Set("svix-id", c.GetHeader("svix-id"))
-			headers.Set("svix-timestamp", c.GetHeader("svix-timestamp"))
-			headers.Set("svix-signature", c.GetHeader("svix-signature"))
-
-			wh, err := svix.NewWebhook(webhookSecret)
-			if err != nil {
-				log.Printf("❌ Error creating webhook verifier: %v", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-				return
-			}
-
-			err = wh.Verify(body, headers)
-			if err != nil {
-				log.Printf("❌ Webhook signature verification failed: %v", err)
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid signature"})
-				return
-			}
-
-			log.Printf("✅ Webhook signature verified successfully")
-		}
-
-		// Parse the event
-		var event ScalekitWebhookEvent
-		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Error parsing webhook event: %v", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Error parsing event"})
-			return
-		}
-
-		log.Printf("📬 Received webhook: %s for org: %s", event.Type, event.OrganizationID)
-		go processWebhookAsync(event)
-		c.JSON(http.StatusOK, gin.H{"status": "received"})
-
+		// Create webhook verifier
 		wh, err := svix.NewWebhook(webhookSecret)
 		if err != nil {
 			log.Printf("❌ Error creating webhook verifier: %v", err)
@@ -152,15 +97,20 @@ func ScalekitWebhookHandler(c *gin.Context) {
 			return
 		}
 
+		// Verify signature
 		err = wh.Verify(body, headers)
 		if err != nil {
 			log.Printf("❌ Webhook signature verification failed: %v", err)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid signature"})
 			return
 		}
+
+		log.Printf("✅ Webhook signature verified successfully")
+	} else {
+		log.Printf("⚠️  Warning: SCALEKIT_WEBHOOK_SECRET not set, skipping verification")
 	}
 
-	// Step 3: Parse webhook event
+	// Step 4: Parse webhook event
 	var event ScalekitWebhookEvent
 	if err := json.Unmarshal(body, &event); err != nil {
 		log.Printf("❌ Error parsing webhook event: %v", err)
@@ -168,13 +118,13 @@ func ScalekitWebhookHandler(c *gin.Context) {
 		return
 	}
 
-	// Step 4: Log the event
+	// Step 5: Log the event
 	log.Printf("📬 Received webhook: %s for org: %s", event.Type, event.OrganizationID)
 
-	// Step 5: Route to appropriate handler (process asynchronously)
+	// Step 6: Process asynchronously
 	go processWebhookAsync(event)
 
-	// Step 6: Respond immediately with 200 OK
+	// Step 7: Respond immediately with 200 OK
 	c.JSON(http.StatusOK, gin.H{"status": "received"})
 }
 

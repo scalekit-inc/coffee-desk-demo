@@ -10,7 +10,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { WorkspaceDropdown } from "@/components/WorkspaceDropdown";
 import { useAuth } from "@/hooks/useAuth";
 import { config } from "@/config";
-import { AlertCircle, Search, User, LogOut, Loader2 } from "lucide-react";
+import { AlertCircle, Search, User, LogOut, Loader2, CheckCircle2 } from "lucide-react";
 import { getSlackStatus, configureSlack, getGithubStatus, configureGithub } from '../api/connections';
 import { useToast } from '@/hooks/use-toast';
 
@@ -28,10 +28,26 @@ export default function Connections() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Load initial connection statuses
+  // 🆕 Check if we just returned from OAuth
   useEffect(() => {
+    checkOAuthReturn();
     loadConnectionStatuses();
   }, []);
+
+  // 🆕 Check if user just completed OAuth flow
+  const checkOAuthReturn = () => {
+    const pendingProvider = localStorage.getItem('oauth_pending');
+    if (pendingProvider) {
+      console.log(`Returned from ${pendingProvider} OAuth`);
+      localStorage.removeItem('oauth_pending');
+      
+      // Show success message
+      toast({
+        title: "Connection Successful",
+        description: `${pendingProvider} integration enabled successfully`,
+      });
+    }
+  };
 
   const loadConnectionStatuses = async () => {
     try {
@@ -53,88 +69,54 @@ export default function Connections() {
     }
   };
 
+  // ✅ FIXED: Clean redirect-based OAuth flow
   const handleSlackToggle = async (enabled: boolean) => {
     setLoadingSlack(true);
     setError(null);
     
     try {
       if (enabled) {
-        // Enable Slack - need to handle OAuth flow
+        // Enable Slack - redirect to OAuth
         const result = await configureSlack(true);
         
-        if (result.authUrl) {
-          // Open OAuth popup
-          const popup = window.open(
-            result.authUrl,
-            'slack-oauth',
-            'width=600,height=700,left=100,top=100'
-          );
-
-          if (!popup) {
-            throw new Error('Popup blocked. Please allow popups for this site.');
-          }
-
-          // Poll for connection completion
-          const checkInterval = setInterval(async () => {
-            if (popup.closed) {
-              clearInterval(checkInterval);
-              
-              // Check if connection was successful
-              const status = await getSlackStatus();
-              const isConnected = status.connection?.enabled || false;
-              
-              setSlackEnabled(isConnected);
-              setSlackConnectedAt(status.connection?.connected_at || null);
-              setLoadingSlack(false);
-              
-              if (isConnected) {
-                toast({
-                  title: "Success",
-                  description: "Slack integration enabled successfully",
-                });
-              } else {
-                toast({
-                  title: "Cancelled",
-                  description: "Slack connection was not completed",
-                  variant: "destructive",
-                });
-              }
-            }
-          }, 1000);
-
-          // Timeout after 5 minutes
-          setTimeout(() => {
-            clearInterval(checkInterval);
-            if (!popup.closed) {
-              popup.close();
-            }
-            setLoadingSlack(false);
-          }, 300000);
+        if (result.auth_url) {
+          console.log('🚀 Redirecting to Slack OAuth:', result.auth_url);
           
-          return; // Don't clear loading state yet
+          // Store that we're doing Slack OAuth
+          localStorage.setItem('oauth_pending', 'Slack');
+          
+          // Redirect to OAuth URL
+          window.location.href = result.auth_url;
+          
+          // Don't clear loading - page will redirect
+          return;
         } else {
-          // No auth URL returned, update status
+          // No auth URL (shouldn't happen for enable)
+          console.warn('No auth URL returned from backend');
           setSlackEnabled(true);
           toast({
             title: "Success",
-            description: "Slack integration enabled successfully",
+            description: "Slack integration enabled",
           });
         }
       } else {
         // Disable Slack
-        await configureSlack(false);
-        setSlackEnabled(false);
-        setSlackConnectedAt(null);
-        toast({
-          title: "Success",
-          description: "Slack integration disabled successfully",
-        });
+        const result = await configureSlack(false);
+        
+        if (result.success) {
+          setSlackEnabled(false);
+          setSlackConnectedAt(null);
+          toast({
+            title: "Success",
+            description: "Slack integration disabled successfully",
+          });
+        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred';
-      console.error('Slack toggle error:', err);
+      console.error('❌ Slack toggle error:', err);
       setError(errorMessage);
-      setSlackEnabled(!enabled); // Revert toggle
+      
       toast({
         title: "Error",
         description: errorMessage,
@@ -145,88 +127,54 @@ export default function Connections() {
     }
   };
 
+  //Clean redirect-based OAuth flow
   const handleGithubToggle = async (enabled: boolean) => {
     setLoadingGithub(true);
     setError(null);
     
     try {
       if (enabled) {
-        // Enable GitHub - need to handle OAuth flow
+        // Enable GitHub - redirect to OAuth
         const result = await configureGithub(true);
         
-        if (result.authUrl) {
-          // Open OAuth popup
-          const popup = window.open(
-            result.authUrl,
-            'github-oauth',
-            'width=600,height=700,left=100,top=100'
-          );
-
-          if (!popup) {
-            throw new Error('Popup blocked. Please allow popups for this site.');
-          }
-
-          // Poll for connection completion
-          const checkInterval = setInterval(async () => {
-            if (popup.closed) {
-              clearInterval(checkInterval);
-              
-              // Check if connection was successful
-              const status = await getGithubStatus();
-              const isConnected = status.connection?.enabled || false;
-              
-              setGithubEnabled(isConnected);
-              setGithubConnectedAt(status.connection?.connected_at || null);
-              setLoadingGithub(false);
-              
-              if (isConnected) {
-                toast({
-                  title: "Success",
-                  description: "GitHub integration enabled successfully",
-                });
-              } else {
-                toast({
-                  title: "Cancelled",
-                  description: "GitHub connection was not completed",
-                  variant: "destructive",
-                });
-              }
-            }
-          }, 1000);
-
-          // Timeout after 5 minutes
-          setTimeout(() => {
-            clearInterval(checkInterval);
-            if (!popup.closed) {
-              popup.close();
-            }
-            setLoadingGithub(false);
-          }, 300000);
+        if (result.auth_url) {
+          console.log('🚀 Redirecting to GitHub OAuth:', result.auth_url);
           
-          return; // Don't clear loading state yet
+          // Store that we're doing GitHub OAuth
+          localStorage.setItem('oauth_pending', 'GitHub');
+          
+          // Redirect to OAuth URL
+          window.location.href = result.auth_url;
+          
+          // Don't clear loading - page will redirect
+          return;
         } else {
-          // No auth URL returned, update status
+          // No auth URL (shouldn't happen for enable)
+          console.warn('No auth URL returned from backend');
           setGithubEnabled(true);
           toast({
             title: "Success",
-            description: "GitHub integration enabled successfully",
+            description: "GitHub integration enabled",
           });
         }
       } else {
         // Disable GitHub
-        await configureGithub(false);
-        setGithubEnabled(false);
-        setGithubConnectedAt(null);
-        toast({
-          title: "Success",
-          description: "GitHub integration disabled successfully",
-        });
+        const result = await configureGithub(false);
+        
+        if (result.success) {
+          setGithubEnabled(false);
+          setGithubConnectedAt(null);
+          toast({
+            title: "Success",
+            description: "GitHub integration disabled successfully",
+          });
+        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred';
-      console.error('GitHub toggle error:', err);
+      console.error('❌ GitHub toggle error:', err);
       setError(errorMessage);
-      setGithubEnabled(!enabled); // Revert toggle
+      
       toast({
         title: "Error",
         description: errorMessage,
@@ -260,7 +208,6 @@ export default function Connections() {
     });
   };
 
-  // Get first letter of email for profile icon
   const emailInitial = user?.email ? user.email[0].toUpperCase() : "U";
 
   if (initialLoading) {
@@ -279,18 +226,14 @@ export default function Connections() {
       {/* Top section with logo and workspace dropdown */}
       <div className="flex items-center justify-between p-4 border-b bg-background z-10">
         <div className="flex items-center gap-4">
-          {/* App logo in top-left */}
           <img 
             src="/uploads/name_icon.png" 
             alt="Coffeedesk Logo" 
             className="h-8 w-auto"
           />
-          
-          {/* Workspace switcher immediately next to logo */}
           <WorkspaceDropdown />
         </div>
         
-        {/* Right side of header with search, documentation, and profile */}
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -339,17 +282,13 @@ export default function Connections() {
         </div>
       </div>
 
-      {/* Main content area with sidebar and dashboard content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
         <div className="w-64 flex-shrink-0 border-r bg-background">
           <AppSidebar />
         </div>
 
-        {/* Main content area */}
         <div className="flex-1 overflow-auto">
           <div className="p-6">
-            {/* Page header */}
             <div className="mb-6">
               <h1 className="text-3xl font-bold">Integrations</h1>
               <p className="text-muted-foreground">
@@ -357,7 +296,6 @@ export default function Connections() {
               </p>
             </div>
 
-            {/* Error Alert */}
             {error && (
               <Alert variant="destructive" className="mb-6">
                 <AlertCircle className="h-4 w-4" />
@@ -365,15 +303,14 @@ export default function Connections() {
               </Alert>
             )}
 
-            {/* Integration Cards */}
             <div className="grid gap-6 max-w-4xl">
               {/* Slack Integration Card */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                   <div>
                     <CardTitle className="flex items-center gap-2">
-                      {/*<span className="text-2xl">💬</span>*/}
                       Slack
+                      {slackEnabled && <CheckCircle2 className="h-5 w-5 text-green-500" />}
                     </CardTitle>
                     <CardDescription>
                       Connect your workspace to Slack for notifications and updates
@@ -402,11 +339,6 @@ export default function Connections() {
                         Connected on {formatDate(slackConnectedAt)}
                       </p>
                     )}
-                    {slackEnabled && (
-                      <Button variant="outline" size="sm" disabled={loadingSlack}>
-                        Manage Slack Settings
-                      </Button>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -416,8 +348,8 @@ export default function Connections() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                   <div>
                     <CardTitle className="flex items-center gap-2">
-                      {/*<span className="text-2xl">🐙</span>*/}
                       GitHub
+                      {githubEnabled && <CheckCircle2 className="h-5 w-5 text-green-500" />}
                     </CardTitle>
                     <CardDescription>
                       Connect your workspace to GitHub for code integration and automation
@@ -446,17 +378,11 @@ export default function Connections() {
                         Connected on {formatDate(githubConnectedAt)}
                       </p>
                     )}
-                    {githubEnabled && (
-                      <Button variant="outline" size="sm" disabled={loadingGithub}>
-                        Manage GitHub Settings
-                      </Button>
-                    )}
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Refresh Button */}
             <div className="mt-6 max-w-4xl">
               <Button 
                 variant="outline" 
