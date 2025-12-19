@@ -217,6 +217,7 @@ The application uses GORM auto-migration. When you add new fields to models:
 | `SCALEKIT_ENVIRONMENT_URL` | Scalekit environment URL | Yes |
 | `SCALEKIT_CLIENT_ID` | Scalekit client ID | Yes |
 | `SCALEKIT_CLIENT_SECRET` | Scalekit client secret | Yes |
+| `SCALEKIT_WEBHOOK_SECRET` | Scalekit Webhook Signing Secret for SCIM Webhooks | Yes
 | `DATABASE_URL` | PostgreSQL connection string | Yes |
 | `PORT` | Server port (default: 8080) | No |
 
