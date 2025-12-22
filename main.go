@@ -6,6 +6,7 @@ import (
 	"coffee-desk-demo/handlers"
 	"coffee-desk-demo/internal/templates"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -109,6 +110,12 @@ func main() {
 		}
 		defer file.Close()
 		c.DataFromReader(200, -1, "text/plain", file, nil)
+	})
+
+	// Add logging middleware
+	r.Use(func(c *gin.Context) {
+		log.Printf("📍 REQUEST: %s %s", c.Request.Method, c.Request.URL.Path)
+		c.Next()
 	})
 
 	// API routes
