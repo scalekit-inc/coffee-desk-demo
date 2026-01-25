@@ -18,6 +18,7 @@ import (
 const (
 	connectorSlack         = "slack"
 	connectorGitHubActions = "github-actions"
+	connectorGmail         = "gmail"
 	statusActive           = "ACTIVE"
 	apiTimeout             = 30 * time.Second
 	tokenTimeout           = 10 * time.Second
@@ -48,8 +49,8 @@ func NewConnectedAccountsHandler() (*ConnectedAccountsHandler, error) {
 // validateConnector validates and normalizes the connector parameter
 func validateConnector(connector string) (string, error) {
 	connector = strings.ToLower(connector)
-	if connector != connectorSlack && connector != connectorGitHubActions {
-		return "", fmt.Errorf("connector must be either '%s' or '%s'", connectorSlack, connectorGitHubActions)
+	if connector != connectorSlack && connector != connectorGitHubActions && connector != connectorGmail {
+		return "", fmt.Errorf("connector must be either '%s', '%s', or '%s'", connectorSlack, connectorGitHubActions, connectorGmail)
 	}
 	return connector, nil
 }

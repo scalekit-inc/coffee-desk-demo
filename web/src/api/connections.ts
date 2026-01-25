@@ -65,3 +65,28 @@ export async function configureGithub(enabled: boolean): Promise<ConfigureRespon
   const data = await response.json();
   return data;  // Contains: { link, expiry }
 }
+
+export async function getGmailStatus(): Promise<ConnectionStatus> {
+  const response = await fetch('/api/connections?connector=gmail', {
+    credentials: 'include',
+  });
+  return response.json();
+}
+
+export async function configureGmail(enabled: boolean): Promise<ConfigureResponse> {
+  const response = await fetch('/api/connections?connector=gmail', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ enabled }),
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to configure Gmail');
+  }
+  
+  // ✅ Magic link response from Scalekit: { link, expiry }
+  const data = await response.json();
+  return data;  // Contains: { link, expiry }
+}

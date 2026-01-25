@@ -11,16 +11,19 @@ import { WorkspaceDropdown } from "@/components/WorkspaceDropdown";
 import { useAuth } from "@/hooks/useAuth";
 import { config } from "@/config";
 import { AlertCircle, Search, User, LogOut, Loader2, CheckCircle2 } from "lucide-react";
-import { getSlackStatus, configureSlack, getGithubStatus, configureGithub } from '../api/connections';
+import { getSlackStatus, configureSlack, getGithubStatus, configureGithub, getGmailStatus, configureGmail } from '../api/connections';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Connections() {
   const [slackEnabled, setSlackEnabled] = useState(false);
   const [githubEnabled, setGithubEnabled] = useState(false);
+  const [gmailEnabled, setGmailEnabled] = useState(false);
   const [slackConnectedAt, setSlackConnectedAt] = useState<string | null>(null);
   const [githubConnectedAt, setGithubConnectedAt] = useState<string | null>(null);
+  const [gmailConnectedAt, setGmailConnectedAt] = useState<string | null>(null);
   const [loadingSlack, setLoadingSlack] = useState(false);
   const [loadingGithub, setLoadingGithub] = useState(false);
+  const [loadingGmail, setLoadingGmail] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -51,9 +54,10 @@ export default function Connections() {
 
   const loadConnectionStatuses = async () => {
     try {
-      const [slackStatus, githubStatus] = await Promise.all([
+      const [slackStatus, githubStatus, gmailStatus] = await Promise.all([
         getSlackStatus(),
         getGithubStatus(),
+        getGmailStatus(),
       ]);
 
       setSlackEnabled(slackStatus.connection?.enabled || false);
@@ -61,6 +65,9 @@ export default function Connections() {
       
       setGithubEnabled(githubStatus.connection?.enabled || false);
       setGithubConnectedAt(githubStatus.connection?.connected_at || null);
+      
+      setGmailEnabled(gmailStatus.connection?.enabled || false);
+      setGmailConnectedAt(gmailStatus.connection?.connected_at || null);
     } catch (err) {
       console.error('Failed to load connection statuses:', err);
       setError('Failed to load connection statuses. Please refresh the page.');
@@ -194,6 +201,70 @@ export default function Connections() {
       });
     } finally {
       setLoadingGithub(false);
+    }
+  };
+
+  // Clean redirect-based OAuth flow
+  const handleGmailToggle = async (enabled: boolean) => {
+    setLoadingGmail(true);
+    setError(null);
+    
+    try {
+      if (enabled) {
+        // Enable Gmail - open magic link in new tab
+        const result = await configureGmail(true);
+        
+        if (result.link) {
+          console.log('🚀 Opening Gmail OAuth in new tab:', result.link);
+          
+          // Store that we're doing Gmail OAuth
+          localStorage.setItem('oauth_pending', 'Gmail');
+          
+          // Open magic link in new tab
+          window.open(result.link, '_blank', 'noopener,noreferrer');
+          
+          // Clear loading state since we're not redirecting
+          setLoadingGmail(false);
+          
+          toast({
+            title: "OAuth Link Opened",
+            description: "Please complete the authorization in the new tab",
+          });
+          return;
+        } else {
+          // No link (shouldn't happen for enable)
+          console.warn('No link returned from backend');
+          setGmailEnabled(true);
+          toast({
+            title: "Success",
+            description: "Gmail integration enabled",
+          });
+        }
+      } else {
+        // Disable Gmail
+        const result = await configureGmail(false);
+        
+        if (result.success) {
+          setGmailEnabled(false);
+          setGmailConnectedAt(null);
+          toast({
+            title: "Success",
+            description: "Gmail integration disabled successfully",
+          });
+        }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      console.error('❌ Gmail toggle error:', err);
+      setError(errorMessage);
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingGmail(false);
     }
   };
 
@@ -388,6 +459,45 @@ export default function Connections() {
                     {githubEnabled && githubConnectedAt && (
                       <p className="text-xs text-muted-foreground">
                         Connected on {formatDate(githubConnectedAt)}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Gmail Integration Card */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                  <div className="space-y-1">
+                    <CardTitle className="flex items-center gap-2">
+                      Gmail
+                      {gmailEnabled && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                    </CardTitle>
+                    <CardDescription>
+                      Connect your workspace to Gmail for email integration and automation
+                    </CardDescription>
+                  </div>
+                  <Switch
+                    checked={gmailEnabled}
+                    onCheckedChange={handleGmailToggle}
+                    disabled={loadingGmail}
+                  />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        {gmailEnabled
+                          ? 'Gmail integration is active. Your workspace is connected.'
+                          : 'Enable Gmail integration to sync emails and automate workflows.'}
+                      </p>
+                      {loadingGmail && (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
+                    {gmailEnabled && gmailConnectedAt && (
+                      <p className="text-xs text-muted-foreground">
+                        Connected on {formatDate(gmailConnectedAt)}
                       </p>
                     )}
                   </div>
