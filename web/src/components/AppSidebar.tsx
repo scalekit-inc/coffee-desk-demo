@@ -2,6 +2,7 @@ import { LayoutDashboard, Users, Settings, FolderOpen, CheckSquare, Building2, S
 import { NavLink, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { hasPermission } from "./RBACGuard";
+import { config } from "../config";
 
 const navigationItems = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
@@ -9,12 +10,13 @@ const navigationItems = [
   { title: "Tasks", url: "/dashboard/tasks", icon: CheckSquare },
 ];
 
-const organizationSettingsItems = [
-  { title: "General", url: "/dashboard/workspace", icon: Building2 },
-  { title: "Members", url: "/dashboard/workspace/members", icon: Users },
-  { title: "Security", url: "/dashboard/workspace/security", icon: Shield },
-  { title: "Enterprise Auth", url: "/dashboard/workspace/settings", icon: Cog },
-];
+// Commented out for now - Organization Settings Items
+// const organizationSettingsItems = [
+//   { title: "General", url: "/dashboard/workspace", icon: Building2 },
+//   { title: "Members", url: "/dashboard/workspace/members", icon: Users },
+//   { title: "Security", url: "/dashboard/workspace/security", icon: Shield },
+//   { title: "Enterprise Auth", url: "/dashboard/workspace/settings", icon: Cog },
+// ];
 
 export function AppSidebar() {
   const { user } = useAuth();
@@ -76,8 +78,8 @@ export function AppSidebar() {
         </nav>
       </div>
 
-      {/* Organization Settings Section */}
-      {canAccessWorkspace && (
+      {/* Commented out for now - Organization Settings Section */}
+      {/* {canAccessWorkspace && (
         <div>
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Organization Settings
@@ -95,21 +97,20 @@ export function AppSidebar() {
             ))}
           </nav>
         </div>
-      )}
+      )} */}
 
       {/* Bottom Settings Section */}
       <div className="mt-auto">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          User Settings
-        </h3>
         <nav className="space-y-1">
-          <NavLink 
-            to="/dashboard/profile" 
-            className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses("/dashboard/profile")}`}
+          <a 
+            href={`${config.scalekitEnvironmentUrl}/ui`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
           >
-            <Users className="h-4 w-4" />
-            <span>User Profile</span>
-          </NavLink>
+            <Settings className="h-4 w-4" />
+            <span>Settings</span>
+          </a>
           <NavLink 
             to="/dashboard/integrations" 
             className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses("/dashboard/integrations")}`}
@@ -117,6 +118,14 @@ export function AppSidebar() {
             <Settings className="h-4 w-4" />
             <span>Integrations</span>
           </NavLink>
+          {/* Commented out for now - User Profile */}
+          {/* <NavLink 
+            to="/dashboard/profile" 
+            className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${getNavClasses("/dashboard/profile")}`}
+          >
+            <Users className="h-4 w-4" />
+            <span>User Profile</span>
+          </NavLink> */}
         </nav>
       </div>
     </nav>
