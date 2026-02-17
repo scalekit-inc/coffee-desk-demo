@@ -142,6 +142,7 @@ func main() {
 		api.GET("/portal/link", handlers.GetPortalLinkHandler)
 		api.GET("/scalekit/environment-url", handlers.GetScaleKitEnvironmentURLHandler)
 		api.GET("/scalekit/passkeys", handlers.RedirectToPasskeysHandler)
+		api.GET("/scalekit/settings", handlers.RedirectToSettingsHandler)
 		api.POST("/workspace/onboarding", handlers.OnboardingHandler)
 
 		//

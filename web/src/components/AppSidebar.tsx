@@ -103,7 +103,7 @@ export function AppSidebar() {
       <div className="mt-auto">
         <nav className="space-y-1">
           <a 
-            href={`${config.scalekitEnvironmentUrl}/ui`}
+            href={`${config.backendUrl}/api/scalekit/settings`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
