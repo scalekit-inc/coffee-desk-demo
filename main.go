@@ -6,6 +6,7 @@ import (
 	"coffee-desk-demo/handlers"
 	"coffee-desk-demo/internal/templates"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -19,6 +20,18 @@ func main() {
 	// Initialize the global ScaleKit client
 	if err := handlers.InitializeScaleKitClient(); err != nil {
 		panic(fmt.Sprintf("Failed to initialize ScaleKit client: %v", err))
+	}
+
+	// Initialize connections handler
+	connectionsHandler, err := handlers.NewConnectionsHandler()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to initialize connections handler: %v", err))
+	}
+
+	// Initialize connected accounts handler
+	connectedAccountsHandler, err := handlers.NewConnectedAccountsHandler()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to initialize connected accounts handler: %v", err))
 	}
 
 	// Initialize database
@@ -99,6 +112,12 @@ func main() {
 		c.DataFromReader(200, -1, "text/plain", file, nil)
 	})
 
+	// Add logging middleware
+	r.Use(func(c *gin.Context) {
+		log.Printf("📍 REQUEST: %s %s", c.Request.Method, c.Request.URL.Path)
+		c.Next()
+	})
+
 	// API routes
 	api := r.Group("/api")
 	{
@@ -109,6 +128,7 @@ func main() {
 		api.GET("/scalekit/callback", handlers.CallbackHandler)
 		api.GET("/session", handlers.SessionHandler)
 		api.GET("/logout", handlers.LogoutHandler)
+		api.POST("/webhooks/scalekit", handlers.ScalekitWebhookHandler)
 		api.GET("/workspace/members", handlers.GetWorkspaceMembersHandler)
 		api.POST("/workspace/members", handlers.CreateWorkspaceMemberHandler)
 		api.DELETE("/workspace/members/:member_id", handlers.DeleteWorkspaceMemberHandler)
@@ -122,7 +142,15 @@ func main() {
 		api.GET("/portal/link", handlers.GetPortalLinkHandler)
 		api.GET("/scalekit/environment-url", handlers.GetScaleKitEnvironmentURLHandler)
 		api.GET("/scalekit/passkeys", handlers.RedirectToPasskeysHandler)
+		api.GET("/scalekit/settings", handlers.RedirectToSettingsHandler)
 		api.POST("/workspace/onboarding", handlers.OnboardingHandler)
+
+		//
+		// Connections routes - registers /api/connections/* endpoints
+		connectionsHandler.RegisterRoutes(api)
+
+		// Connected accounts routes - registers GET /api/connections?connector=slack|github
+		connectedAccountsHandler.RegisterRoutes(api)
 
 		// Project Management API routes
 		api.GET("/projects", handlers.GetProjectsHandler)
