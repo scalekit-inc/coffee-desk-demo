@@ -1,9 +1,17 @@
 package handlers
 
 import (
+	"context"
 	"coffee-desk-demo/database"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -149,6 +157,18 @@ func CreateProjectHandler(c *gin.Context) {
 	if err := database.DB.Create(&project).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create project"})
 		return
+	}
+
+	// Load the owner for Slack notification
+	if ownerID != nil {
+		if err := database.DB.Preload("Owner").Where("id = ?", project.ID).First(&project).Error; err == nil {
+			// Extract user ID from token before goroutine (context may not be valid in goroutine)
+			userID, err := getUserIDFromToken(c)
+			if err == nil {
+				// Try to send Slack notification if Slack is enabled (async)
+				go sendProjectCreationSlackMessage(userID, project)
+			}
+		}
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
@@ -321,4 +341,186 @@ func DeleteProjectHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Project deleted successfully"})
+}
+
+// getUserIDFromToken extracts user ID from the JWT token
+func getUserIDFromToken(c *gin.Context) (string, error) {
+	accessToken, err := c.Cookie("auth_access_token")
+	if err != nil {
+		return "", fmt.Errorf("no access token found in cookies: %w", err)
+	}
+
+	claims, err := decodeJwtPayload(accessToken)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode token: %w", err)
+	}
+
+	userID, err := getStringClaim(claims, "sub")
+	if err != nil {
+		return "", fmt.Errorf("no user ID (sub) in token: %w", err)
+	}
+
+	return userID, nil
+}
+
+// isSlackEnabled checks if Slack integration is enabled for a user
+func isSlackEnabled(ctx context.Context, userID string) (bool, error) {
+	config, err := getScaleKitConfig()
+	if err != nil {
+		return false, fmt.Errorf("failed to get ScaleKit config: %w", err)
+	}
+
+	handler := &ConnectedAccountsHandler{
+		envURL:       config.EnvURL,
+		clientID:     config.ClientID,
+		clientSecret: config.ClientSecret,
+		httpClient:   &http.Client{Timeout: 30 * time.Second},
+	}
+
+	apiURL := fmt.Sprintf("%s/api/v1/connected_accounts/auth?connector=slack&identifier=%s",
+		config.EnvURL, url.QueryEscape(userID))
+
+	resp, err := handler.makeAuthenticatedRequest(ctx, "GET", apiURL, nil)
+	if err != nil {
+		return false, fmt.Errorf("failed to check Slack status: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// 404 means not connected
+	if resp.StatusCode == http.StatusNotFound {
+		return false, nil
+	}
+
+	// Check for other errors
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return false, fmt.Errorf("API returned status %d", resp.StatusCode)
+	}
+
+	// Parse response
+	respBody, parsedResp, err := readAndParseResponse(resp)
+	if err != nil {
+		return false, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if parsedResp == nil {
+		return false, fmt.Errorf("failed to parse response: %s", string(respBody))
+	}
+
+	// Check if connected_account exists and status is ACTIVE
+	if ca, ok := parsedResp["connected_account"].(map[string]interface{}); ok {
+		if status, ok := ca["status"].(string); ok {
+			return status == "ACTIVE", nil
+		}
+	}
+
+	return false, nil
+}
+
+// executeSlackSendMessage executes the Slack send message tool via Scalekit API
+func executeSlackSendMessage(ctx context.Context, userID, channel, text string) error {
+	config, err := getScaleKitConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get ScaleKit config: %w", err)
+	}
+
+	handler := &ConnectedAccountsHandler{
+		envURL:       config.EnvURL,
+		clientID:     config.ClientID,
+		clientSecret: config.ClientSecret,
+		httpClient:   &http.Client{Timeout: 30 * time.Second},
+	}
+
+	// Prepare tool parameters for slack_send_message
+	// Required: channel (channel ID, channel name like #general, or user ID for DM) and text
+	toolParams := map[string]interface{}{
+		"channel": channel,
+		"text":    text,
+	}
+
+	requestBody := map[string]interface{}{
+		"tool_name": "slack_send_message",
+		"identifier": userID,
+		"connector": "slack",
+		"params":    toolParams,
+	}
+
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request body: %w", err)
+	}
+
+	apiURL := fmt.Sprintf("%s/api/v1/execute_tool", config.EnvURL)
+	resp, err := handler.makeAuthenticatedRequest(ctx, "POST", apiURL, jsonData)
+	if err != nil {
+		return fmt.Errorf("failed to execute tool: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	return nil
+}
+
+// sendProjectCreationSlackMessage sends a Slack notification to the project assignee
+func sendProjectCreationSlackMessage(userID string, project database.Project) {
+	// Check if Slack is enabled for the user creating the project
+	ctx := context.Background()
+	slackEnabled, err := isSlackEnabled(ctx, userID)
+	if err != nil {
+		log.Printf("Failed to check Slack status: %v", err)
+		return
+	}
+
+	if !slackEnabled {
+		log.Printf("Slack not enabled for user %s, skipping Slack notification", userID)
+		return
+	}
+
+	// Check if project has an assignee (owner)
+	if project.Owner == nil || project.Owner.Email == "" {
+		log.Printf("Project has no assignee, skipping Slack notification")
+		return
+	}
+
+	// Prepare Slack message content
+	// Extract assignee name from email (part before @) for a friendly mention
+	assigneeName := project.Owner.Email
+	if atIndex := strings.Index(project.Owner.Email, "@"); atIndex > 0 {
+		assigneeName = project.Owner.Email[:atIndex]
+		// Replace dots/underscores with spaces
+		assigneeName = strings.ReplaceAll(assigneeName, ".", " ")
+		assigneeName = strings.ReplaceAll(assigneeName, "_", " ")
+		// Capitalize first letter of each word
+		words := strings.Fields(assigneeName)
+		for i, word := range words {
+			if len(word) > 0 {
+				words[i] = strings.ToUpper(word[:1]) + strings.ToLower(word[1:])
+			}
+		}
+		assigneeName = strings.Join(words, " ")
+	}
+
+	message := "📋 *New Project Assigned*\n\n"
+	message += fmt.Sprintf("Hey *%s* (%s)! You have been assigned to a new project:\n\n", assigneeName, project.Owner.Email)
+	message += fmt.Sprintf("*Project Name:* %s\n", project.Name)
+	if project.Description != nil && *project.Description != "" {
+		message += fmt.Sprintf("*Description:* %s\n", *project.Description)
+	}
+	message += fmt.Sprintf("*Priority:* %s\n", project.Priority)
+	message += fmt.Sprintf("*Status:* %s\n\n", project.Status)
+	message += "Please review and start working on this project."
+
+	// Send to the Coffee Desk team channel
+	channel := "#all-coffeedesk"
+
+	// Send Slack message
+	if err := executeSlackSendMessage(ctx, userID, channel, message); err != nil {
+		log.Printf("Failed to send project creation Slack message: %v", err)
+		return
+	}
+
+	log.Printf("Successfully sent project creation Slack message to %s for project %s", channel, project.Name)
 }

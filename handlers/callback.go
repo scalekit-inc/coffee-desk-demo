@@ -2,8 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -29,51 +27,31 @@ func CallbackHandler(c *gin.Context) {
 		return
 	}
 
-	envURL := os.Getenv("SCALEKIT_ENVIRONMENT_URL")
-
-	redirectURL := getUIBaseURL(c) + scalekitCallbackPath
+	redirectURL := getUIBaseURL(c) + "/api/scalekit/callback"
 
 	log.Printf("Using redirect URL: %s", redirectURL)
 
-	// Get the global ScaleKit client
+	// Exchange code for tokens using ScaleKit SDK
 	scalekitClient, err := GetScaleKitClient()
 	if err != nil {
+		log.Printf("Error getting ScaleKit client: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
-	tokenResponse, err := scalekitClient.AuthenticateWithCode(c.Request.Context(), code, redirectURL, scalekit.AuthenticationOptions{})
+
+	authResp, err := scalekitClient.AuthenticateWithCode(code, redirectURL, scalekit.AuthenticationOptions{})
 	if err != nil {
 		log.Printf("Error exchanging code for token: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to exchange code for token"})
 		return
 	}
 
-	accessToken := tokenResponse.AccessToken
-	idToken := tokenResponse.IdToken
-	refreshToken := tokenResponse.RefreshToken
+	accessToken := authResp.AccessToken
+	idToken := authResp.IdToken
+	refreshToken := authResp.RefreshToken
+	userInfo := &authResp.User
 
-	log.Printf("Successfully obtained tokens")
-
-	// Fetch user info
-	userReq, _ := http.NewRequest("GET", envURL+"/userinfo", nil)
-	userReq.Header.Set("Authorization", "Bearer "+accessToken)
-	userResp, err := http.DefaultClient.Do(userReq)
-	if err != nil || userResp.StatusCode != 200 {
-		log.Printf("Error fetching user info: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user info"})
-		return
-	}
-	defer userResp.Body.Close()
-
-	userBody, _ := io.ReadAll(userResp.Body)
-	var userInfo map[string]interface{}
-	if err := json.Unmarshal(userBody, &userInfo); err != nil {
-		log.Printf("Error decoding user info: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode user info"})
-		return
-	}
-
-	log.Printf("Successfully fetched user info")
+	log.Printf("Successfully obtained tokens and user info")
 
 	// TODO: Handle the user info and tokens as needed
 	// For demo: set cookies and redirect
@@ -129,7 +107,7 @@ func CallbackHandler(c *gin.Context) {
 				if err != nil {
 					// User doesn't exist, create it
 					// Get user email from userInfo first, or fetch from ScaleKit if not available
-					email, _ := userInfo["email"].(string)
+					email := userInfo.Email
 					if email == "" {
 						// Fetch email from ScaleKit API
 						scalekitClient, err := GetScaleKitClient()

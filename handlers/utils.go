@@ -103,3 +103,16 @@ func RedirectToPasskeysHandler(c *gin.Context) {
 	passkeysURL := fmt.Sprintf("%s/ui/profile/passkeys", envURL)
 	c.Redirect(http.StatusTemporaryRedirect, passkeysURL)
 }
+
+// RedirectToSettingsHandler redirects to the Scalekit settings/UI page
+func RedirectToSettingsHandler(c *gin.Context) {
+	envURL := os.Getenv("SCALEKIT_ENVIRONMENT_URL")
+	if envURL == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "SCALEKIT_ENVIRONMENT_URL not configured"})
+		return
+	}
+
+	// Construct the settings URL and redirect
+	settingsURL := fmt.Sprintf("%s/ui", envURL)
+	c.Redirect(http.StatusTemporaryRedirect, settingsURL)
+}
