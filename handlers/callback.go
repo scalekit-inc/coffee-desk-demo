@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/scalekit-inc/scalekit-sdk-go/v2"
 	usersv1 "github.com/scalekit-inc/scalekit-sdk-go/v2/pkg/grpc/scalekit/v1/users"
 )
 
@@ -29,53 +30,27 @@ func CallbackHandler(c *gin.Context) {
 	}
 
 	envURL := os.Getenv("SCALEKIT_ENVIRONMENT_URL")
-	clientID := os.Getenv("SCALEKIT_CLIENT_ID")
-	clientSecret := os.Getenv("SCALEKIT_CLIENT_SECRET")
 
-	redirectURL := getUIBaseURL(c) + "/api/scalekit/callback"
+	redirectURL := getUIBaseURL(c) + scalekitCallbackPath
 
 	log.Printf("Using redirect URL: %s", redirectURL)
 
-	// Exchange code for token
-	tokenURL := envURL + "/oauth/token"
-	tokenResp, err := http.Post(
-		tokenURL,
-		"application/x-www-form-urlencoded",
-		strings.NewReader(encodeParams(map[string]string{
-			"code":          code,
-			"redirect_uri":  redirectURL,
-			"client_id":     clientID,
-			"client_secret": clientSecret,
-			"grant_type":    "authorization_code",
-		})),
-	)
+	// Get the global ScaleKit client
+	scalekitClient, err := GetScaleKitClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
+	}
+	tokenResponse, err := scalekitClient.AuthenticateWithCode(c.Request.Context(), code, redirectURL, scalekit.AuthenticationOptions{})
 	if err != nil {
 		log.Printf("Error exchanging code for token: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to exchange code for token"})
 		return
 	}
-	defer tokenResp.Body.Close()
-	if tokenResp.StatusCode != 200 {
-		body, readErr := io.ReadAll(tokenResp.Body)
-		bodyStr := string(body)
-		if readErr != nil {
-			bodyStr = "Failed to read response body: " + readErr.Error()
-		}
-		log.Printf("Token exchange failed with status %d. URL: %s, Response body: %s", tokenResp.StatusCode, tokenURL, bodyStr)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to exchange code for token"})
-		return
-	}
 
-	var tokenData map[string]interface{}
-	if err := json.NewDecoder(tokenResp.Body).Decode(&tokenData); err != nil {
-		log.Printf("Error decoding token response: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode token response"})
-		return
-	}
-
-	accessToken, _ := tokenData["access_token"].(string)
-	idToken, _ := tokenData["id_token"].(string)
-	refreshToken, _ := tokenData["refresh_token"].(string)
+	accessToken := tokenResponse.AccessToken
+	idToken := tokenResponse.IdToken
+	refreshToken := tokenResponse.RefreshToken
 
 	log.Printf("Successfully obtained tokens")
 
