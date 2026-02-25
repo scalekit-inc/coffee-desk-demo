@@ -39,7 +39,7 @@ func CallbackHandler(c *gin.Context) {
 		return
 	}
 
-	authResp, err := scalekitClient.AuthenticateWithCode(code, redirectURL, scalekit.AuthenticationOptions{})
+	authResp, err := scalekitClient.AuthenticateWithCode(c.Request.Context(), code, redirectURL, scalekit.AuthenticationOptions{})
 	if err != nil {
 		log.Printf("Error exchanging code for token: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to exchange code for token"})

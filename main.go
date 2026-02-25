@@ -125,6 +125,7 @@ func main() {
 			c.JSON(200, gin.H{"message": "pong"})
 		})
 		api.GET("/authorize", handlers.AuthorizeHandler)
+		api.GET("/login/initiate", handlers.IdpInitiatedLoginHandler)
 		api.GET("/scalekit/callback", handlers.CallbackHandler)
 		api.GET("/session", handlers.SessionHandler)
 		api.GET("/logout", handlers.LogoutHandler)

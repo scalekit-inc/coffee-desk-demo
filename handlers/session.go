@@ -41,7 +41,7 @@ func SessionHandler(c *gin.Context) {
 	// Validate the access token using the SDK
 	log.Printf("Validating access token...")
 
-	isValid, err := scalekitClient.ValidateAccessToken(accessToken)
+	isValid, err := scalekitClient.ValidateAccessToken(c.Request.Context(), accessToken)
 	if err != nil {
 		log.Printf("Error validating access token: %v", err)
 		// If validation fails (e.g., token expired), treat it as invalid and try to refresh
@@ -53,7 +53,7 @@ func SessionHandler(c *gin.Context) {
 		log.Printf("Access token is invalid, attempting to refresh")
 
 		// Call RefreshAccessToken SDK method
-		refreshResponse, err := scalekitClient.RefreshAccessToken(refreshToken)
+		refreshResponse, err := scalekitClient.RefreshAccessToken(c.Request.Context(),refreshToken)
 		if err != nil {
 			log.Printf("Error refreshing token: %v", err)
 			// If refresh fails, call LogoutHandler
