@@ -8,7 +8,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/scalekit-inc/scalekit-sdk-go/v2 v2.1.1-0.20260306094338-c859e66a99be
+	github.com/scalekit-inc/scalekit-sdk-go/v2 v2.2.0
 	github.com/svix/svix-webhooks v1.86.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.0
