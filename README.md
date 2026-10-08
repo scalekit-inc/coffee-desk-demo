@@ -2,6 +2,8 @@
 
 Full-featured demo app demonstrating Scalekit's auth stack including workspace creation, user provisioning, granular permission management, and enterprise-grade login methods (SAML/OIDC SSO, social providers, passwordless auth). Can be used as a project template for building B2B applications with multi-tenant support.
 
+Scalekit provides auth and actions on behalf of users, with 500+ connectors and 20,000+ tools.
+
 This application provides a complete project management system with a Go backend and React frontend, showcasing how to build production-ready B2B applications with Scalekit's authentication and authorization features.
 
 ## Features
